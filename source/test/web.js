@@ -1,0 +1,22 @@
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  await page.goto('http://localhost:8091/');
+  await page.waitForFunction(() => document.querySelector('#status span').textContent === 'Offline ready', null, { timeout: 15000 });
+  await page.click('[data-act="setup-save"]');
+  await page.click('[data-act="add-drink"][data-p="0"]');
+  await page.click('[data-act="add-water"][data-p="0"]');
+  await ctx.setOffline(true);
+  await page.reload();
+  await page.waitForTimeout(600);
+  const drinks = await page.textContent('.tile .fig.drink .v');
+  const waters = await page.textContent('.tile .fig.water .v');
+  const title = await page.title();
+  console.log(JSON.stringify({ offlineReload: title, drinks, waters, errors }));
+  await browser.close();
+})();

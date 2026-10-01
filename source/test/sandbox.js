@@ -1,0 +1,27 @@
+const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+(async () => {
+  const art = fs.readFileSync(path.join(__dirname, '..', 'dist', 'artifact.html'), 'utf8');
+  const doc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>${art}</body></html>`;
+  const outer = `<!doctype html><html><body style="margin:0"><iframe id="f" sandbox="allow-scripts" style="border:0;width:390px;height:844px"></iframe><script>document.getElementById("f").srcdoc = ${JSON.stringify(doc).replace(/<\//g, '<\\/')};</script></body></html>`;
+  fs.writeFileSync(path.join(__dirname, 'frame.html'), outer);
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  await page.goto('file://' + path.join(__dirname, 'frame.html'));
+  await page.waitForTimeout(700);
+  const f = page.frames().find(x => x !== page.mainFrame());
+  await f.click('[data-act="setup-save"]');
+  await f.click('[data-act="add-drink"][data-p="0"]');
+  await f.click('[data-act="start-drink"][data-p="1"]');
+  await f.click('[data-act="finish"]');
+  const counts = await f.$$eval('.tile .fig.drink .v', els => els.map(e => e.textContent));
+  await f.evaluate(() => document.querySelector('.tabs [data-go="trip"]').click());
+  await f.waitForTimeout(200);
+  const bars = await f.$$eval('#tripchart path.mk', els => els.length);
+  console.log(JSON.stringify({ counts, bars, errors }));
+  await browser.close();
+})();

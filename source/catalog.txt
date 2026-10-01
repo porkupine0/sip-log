@@ -1,0 +1,468 @@
+Beer|1
+Glass of wine|1
+Glass of bubbly|1
+Shot|1
+Double|2
+Hard seltzer|1
+Cocktail|1.5
+Frozen drink|1.3
+Spiked coffee|1
+Rum and Coke|1.3
+Vodka cranberry|1.3
+Piña Colada|1.3
+Painkiller|1.3
+Mai Tai (Trader Vic's)|1.7
+Resort Mai Tai|1.8
+Bahama Mama|1
+Rum Runner|1.7
+Zombie|3.3
+Hurricane|2
+Planter's Punch|1.4
+Jungle Bird|1.3
+Navy Grog|2.1
+Scorpion|1.3
+Scorpion Bowl|2.7
+Blue Hawaiian|1.3
+Blue Hawaii|1.2
+Goombay Smash|1.6
+Coco Loco|2
+Lava Flow|1
+Miami Vice|1.3
+Frozen Daiquiri|1.3
+Strawberry Daiquiri (Frozen)|1.3
+Mango Daiquiri (Frozen)|1.3
+Banana Daiquiri (Frozen)|1.5
+Peach Daiquiri (Frozen)|1.3
+Passion Fruit Daiquiri (Frozen)|1.3
+Pineapple Daiquiri (Frozen)|1.3
+Watermelon Daiquiri (Frozen)|1.3
+Coconut Daiquiri|1.3
+Banana Colada|1.2
+Mango Colada|1
+Strawberry Colada|1
+Skinny Colada|1
+Chi Chi|1
+Coconut Mojito|1
+Pineapple Mojito|1
+Passion Fruit Mojito|1
+Mango Mojito|1
+Rum Swizzle|2.1
+Queen's Park Swizzle|1.4
+Missionary's Downfall|0.8
+Fog Cutter|2
+Saturn|0.9
+Three Dots and a Dash|1.7
+Royal Hawaiian|1.1
+Suffering Bastard|1.4
+Yellow Bird|1.6
+Rum Punch (Bajan)|1.4
+Caribbean Rum Punch|1.3
+Sky Juice|1.4
+Batida de Coco|1.3
+Guavaberry Colada|0.8
+Aruba Ariba|1.5
+Shark Bite|1.3
+Bob Marley|1.2
+Malibu Sunset|0.5
+Doctor Funk|1.4
+Ancient Mariner|1.5
+Nui Nui|1.4
+Cobra's Fang|1.7
+Tradewinds|1.5
+Hotel Nacional Special|1.2
+Coconut Patrón Margarita|1.7
+Frozen Coconut Margarita|1.7
+Spicy Coconut Margarita|1.7
+Pineapple Coconut Margarita|1.7
+Mango Coconut Margarita|1.7
+Skinny Coconut Margarita|1.3
+Tequila Colada|1.3
+Classic Margarita|1.8
+Tommy's Margarita|1.3
+Cadillac Margarita|2
+Frozen Margarita|2
+Frozen Strawberry Margarita|1.7
+Mango Margarita|1.7
+Spicy Margarita (Jalapeño)|1.8
+Spicy Pineapple Margarita|1.7
+Passion Fruit Margarita|1.7
+Watermelon Margarita|1.7
+Blood Orange Margarita|1.7
+Blue Margarita|1.8
+Raspberry Margarita|1.8
+Peach Margarita|1.7
+Hibiscus Margarita|1.7
+Cucumber Jalapeño Margarita|1.3
+Strawberry Basil Margarita|1.7
+Champagne Margarita|1.9
+Beergarita|2
+Paloma|1.3
+Fresh Paloma|1.3
+Tequila Sunrise|1.3
+El Diablo|1.1
+Mexican Mule|1.3
+Batanga|1.3
+Cantarito|1.3
+Ranch Water|1.3
+Matador|1
+Bloody Maria|1.3
+Oaxaca Old Fashioned|1.4
+Tequila Sour|1.3
+Siesta|1.2
+Mexican Firing Squad|1.4
+Juan Collins|1.3
+Tequila Mojito|1.3
+Rosita|1.5
+Vampiro|1.3
+Mezcal Margarita|1.9
+Mezcal Paloma|1.4
+Naked and Famous|1.2
+Mezcal Negroni|1.4
+Division Bell|1.1
+Mezcal Mule|1.4
+Tequila Espresso Martini|1.2
+Mexican Martini|1.8
+Espresso Martini|1.5
+Coconut Espresso Martini|1.3
+Salted Caramel Espresso Martini|1
+Irish Cream Espresso Martini|1.1
+Cosmopolitan|1.5
+White Cosmopolitan|1.5
+Lemon Drop|1.7
+Raspberry Lemon Drop|1.5
+Lavender Lemon Drop|1.5
+French Martini|1.1
+Passion Fruit Martini|1
+Lychee Martini|1.6
+Appletini|1.3
+Chocolate Martini|1.3
+Chocolate Raspberry Martini|1.3
+White Chocolate Martini|1.3
+Mint Chocolate Martini|1.5
+Hazelnut Martini|1.5
+Tiramisu Martini|1
+Key Lime Pie Martini|1.4
+Pineapple Upside-Down Martini|1
+Birthday Cake Martini|1.2
+Coconut Cream Pie Martini|0.9
+Caramel Apple Martini|1.4
+Dirty Martini|1.7
+Classic Gin Martini|1.9
+Vodka Martini|1.8
+Vesper|2
+Gibson|1.9
+Martinez|1.6
+Breakfast Martini|1.7
+Pomegranate Martini|1.3
+Watermelon Martini|1
+Cucumber Elderflower Martini|1.6
+Peach Martini|1.3
+Mango Martini|1.3
+Bikini Martini|1.4
+Melon Martini|1.3
+Raspberry Martini|1.3
+Flirtini|1.3
+Orange Blossom Martini|1.2
+Cucumber Basil Gin Martini|1.4
+Blood Orange Martini|1.3
+Daiquiri|1.3
+Hemingway Daiquiri|1.5
+Strawberry Daiquiri (Shaken)|1.3
+Ti' Punch|1.7
+Corn 'n' Oil|1.5
+El Presidente|1.4
+Mary Pickford|1.1
+Rum Old Fashioned|1.4
+Treacle|1.4
+Kingston Negroni|1.4
+Rum Sour|1.4
+Airmail|1.3
+Old Cuban|1.6
+Cable Car|1.4
+Caipirinha|1.3
+Caipiroska|1.3
+Strawberry Caipirinha|1.3
+Passion Fruit Caipirinha|1.3
+Pisco Sour|1.4
+Pisco Punch|1.3
+Guaro Sour|1
+Poncha|1.7
+Gimlet|1.4
+Vodka Gimlet|1.3
+Cucumber Gimlet|1.4
+Gin Basil Smash|1.4
+Bee's Knees|1.4
+Southside|1.4
+Aviation|1.7
+Last Word|1.6
+Corpse Reviver No. 2|1.3
+Negroni|1.4
+White Negroni|1.6
+Clover Club|1.2
+Pink Lady|1.4
+White Lady|1.9
+Bramble|1.6
+Gin Fizz|1.4
+Ramos Gin Fizz|1.4
+Singapore Sling|1.6
+Monkey Gland|1.1
+Pegu Club|1.9
+Gin Sour|1.4
+Army & Navy|1.4
+Hanky Panky|1.7
+Bijou|1.9
+Jasmine|1.3
+Twentieth Century|1.5
+Bronx|1.3
+Satan's Whiskers|1.3
+Casino|1.6
+Sidecar|1.8
+Between the Sheets|1.8
+Jack Rose|1.3
+Brandy Crusta|1.7
+Metropolitan|1.3
+Stinger|1.6
+Japanese Cocktail|1.4
+Champs-Élysées|1.4
+Brandy Old Fashioned|1.4
+Brandy Sour|1.4
+Amaretto Sour|0.9
+Midori Sour|0.8
+Sloe Gin Fizz|1
+Godmother|1.3
+Mojito|1.3
+Strawberry Mojito|1.3
+Raspberry Mojito|1.3
+Watermelon Mojito|1.3
+Royal Mojito|1.6
+Cuba Libre|1.3
+Captain & Coke|1.2
+Dark 'n' Stormy|1.3
+Moscow Mule|1.3
+London Mule|1.4
+Jamaican Mule|1.4
+Pineapple Mule|1.3
+Blackberry Mule|1.3
+Gin Gin Mule|1.1
+Gin & Tonic|1.4
+Spanish Gin Tonic|1.4
+Elderflower Gin & Tonic|1.6
+Vodka Tonic|1.3
+Vodka Soda|1.3
+Vodka Cranberry|1.3
+Sea Breeze|1
+Bay Breeze|1
+Malibu Bay Breeze|0.7
+Malibu Pineapple|0.7
+Madras|1
+Screwdriver|1.3
+Greyhound|1.3
+Salty Dog|1.4
+Harvey Wallbanger|1.3
+Sex on the Beach|1.2
+Fuzzy Navel|0.7
+Woo Woo|1.3
+Long Island Iced Tea|1.7
+Long Beach Iced Tea|1.7
+Tokyo Tea|1.9
+Electric Lemonade|1.2
+Blue Lagoon|1.3
+Dirty Shirley|1
+Tom Collins|1.4
+Vodka Collins|1.3
+Elderflower Collins|1.3
+Gin Rickey|1.4
+Floradora|1.1
+Americano|1
+Campari Soda|0.8
+Garibaldi|0.6
+Fernet con Coca|1.3
+Piscola|1.3
+Chilcano|1.4
+Ting with a Sting|1.3
+Cyprus Brandy Sour|1.4
+Horse's Neck|1.4
+Bloody Mary|1.3
+Bloody Caesar|1.3
+Red Snapper|1.4
+Vodka Red Bull|1
+Pimm's Cup|0.8
+Vodka Lemonade|1.3
+John Daly|1
+Cucumber Mint Cooler|1.3
+Ouzo & Water|1
+Pastis|0.8
+Aperol Spritz|0.9
+Campari Spritz|1.4
+Hugo Spritz|1.1
+Limoncello Spritz|1.6
+Elderflower Spritz|0.9
+Lillet Tonic|0.6
+Bicicletta|1.4
+Negroni Sbagliato|1.2
+Mimosa|0.6
+Pineapple Mimosa|0.6
+Mango Mimosa|0.7
+Bellini|0.7
+Rossini|0.7
+Kir Royale|1.1
+Champagne Cocktail|1.1
+French 75|1.3
+French 77|1.5
+Sgroppino|0.9
+Death in the Afternoon|1.8
+Chambord Royale|1.1
+Poinsettia|1
+Red Sangria|1.9
+White Sangria|1.4
+Cava Sangria|1.4
+Tinto de Verano|0.7
+Kalimotxo|0.7
+Rebujito|0.5
+Agua de Valencia|1.3
+Vermut|0.8
+Kir|1.1
+Wine Spritzer|0.8
+White Port & Tonic|0.6
+Sherry Cobbler|0.8
+Mulled Wine|1.4
+Frosé|0.8
+Medio y Medio|1.2
+Clericó|0.8
+Terremoto|1
+Fish House Punch|1.3
+Port|1
+Michelada|0.9
+Chelada|0.9
+Shandy|0.5
+Radler|0.5
+Monaco|0.5
+Black Velvet|0.8
+Snakebite|1.3
+Beermosa|0.4
+Lunchbox|1.1
+Red Eye|0.6
+Stout Float|0.6
+Mudslide|1.3
+Mudslide (On the Rocks)|1.3
+White Russian|1.7
+Black Russian|1.7
+Colorado Bulldog|1.3
+Grasshopper|0.8
+Frozen Grasshopper|0.8
+Brandy Alexander|1.4
+Golden Cadillac|0.9
+Golden Dream|0.8
+Toasted Almond|0.8
+Nutty Irishman|0.6
+Bushwacker|1.4
+Dirty Banana|1
+Monkey La La|1.3
+Kahlúa Colada|1
+Chocolate Monkey|0.8
+Coquito|1
+Baileys on the Rocks|0.6
+Brandy Milk Punch|1.3
+Creamsicle|1.2
+Velvet Hammer|1.4
+Smith & Curran|0.5
+Strawberry Shake (Spiked)|0.4
+Chocolate Shake (Spiked)|0.8
+Piña Colada Float|1
+Carajillo|0.8
+Spanish Coffee|1.6
+Mexican Coffee|1
+Jamaican Coffee|1
+Keoke Coffee|1.2
+Baileys Coffee|0.4
+Café Amaretto|0.7
+Hazelnut Coffee|0.6
+Café Royale|0.7
+Caffè Corretto|0.3
+Kahlúa Iced Coffee|0.5
+RumChata Iced Coffee|0.3
+Hot Buttered Rum|1.3
+Hot Toddy (Brandy)|1
+Peppermint Patty|0.8
+Spiked Mexican Hot Chocolate|1
+Baileys Hot Chocolate|0.4
+Spiced Rum Chai|0.9
+Spiked Affogato|0.3
+Lemon Drop Shot|0.8
+Kamikaze|1
+B-52|0.6
+Baby Guinness|0.4
+Buttery Nipple|0.4
+Mini Beer|0.5
+Jäger Bomb|0.9
+Pineapple Upside-Down Shot|0.4
+Chocolate Cake Shot|0.8
+White Tea Shot|0.5
+Mexican Candy Shot|0.8
+Tequila Shot|1
+Tequila & Sangrita|1
+Scooby Snack|0.3
+Surfer on Acid|0.5
+Melon Ball|0.5
+Purple Hooter|0.6
+Alien Brain Hemorrhage|0.3
+Mind Eraser|1
+Irish Flag|0.7
+Pink Starburst|0.6
+Cinnamon Toast Shot|0.5
+Rattlesnake|0.5
+Jolly Rancher|0.6
+Apple Pie Shot|0.4
+Birthday Cake Shot|0.6
+Limoncello|0.8
+Ginjinha|0.5
+Sambuca con la Mosca|0.6
+Mastiha on Ice|1
+Xtabentún|0.8
+Grappa|0.7
+Amaro Digestivo|0.6
+Fernet Shot|0.7
+Mezcal Neat|1.1
+Añejo Tequila Neat|1
+Cognac Neat|1
+Piña Fumada|1.4
+Jamaican Rum Punch|1.6
+Midori Splice|0.7
+Coconut Mule|0.7
+Tequila Lemonade|1.3
+Strawberry Martini|1.3
+Japanese Slipper|1
+Tuxedo No. 2|1.9
+Alaska|1.7
+Pink Gin|1.5
+Vodka Sour|1.3
+Chilean Pisco Sour|1.3
+Gin Daisy|1.4
+French Connection|1.3
+Charlie Chaplin|0.8
+Aperol Sour|0.3
+Gin & Juice|1.4
+Limoncello Collins|1.2
+Rum Collins|1.3
+Pink Lemonade Vodka|1.3
+Vodka Cherry Limeade|1
+Strawberry Mule|1.3
+Blueberry Mojito|1.3
+Rosé Sangria|1.6
+Spaghett|1.1
+Shandy Gaff|0.5
+Kir Breton|0.6
+Gin Alexander|1.5
+Café Brûlot|1
+Guava Daiquiri (Frozen)|1.3
+Guava Margarita|1.7
+Guava Mimosa|0.7
+Ginger Gimlet|1.6
+Old-School Gimlet|1.4
+Hpnotiq Breeze|0.4
+Orange Crush|1.7
+Rosemary Greyhound|1.3
+Ginger Mojito|1.3
+Mango Mule|1.3
+Creamsicle Shot|0.4
+Aguardiente|0.5
