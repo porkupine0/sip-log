@@ -24,7 +24,7 @@
     set(k, v) { mem[k] = v; try { localStorage.setItem('siplog.' + k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
   };
   const S = Object.assign({
-    people: ['Me', 'Partner'], start: '', days: 10, ports: [], cutoff: 4,
+    people: [{ name: 'Me' }, { name: 'Partner' }], start: '', days: 10, ports: [], cutoff: 4,
     waterUnit: 'bottle', waterGoal: 5, limit: '', pkg: '', price: 16,
     theme: 'auto', setupDone: false, lastBackup: 0
   }, store.get('settings', {}));
@@ -37,6 +37,22 @@
   const STRENGTHS = [['Light', 1, 'beer, wine, spritz'], ['Regular', 1.5, 'most cocktails'], ['Strong', 2, 'doubles, Long Islands']];
   const WATER = { glass: ['Glass', 240, '8 oz'], cup: ['Large cup', 355, '12 oz'], bottle: ['Bottle', 500, '16.9 oz'], liter: ['Liter', 1000, '33.8 oz'] };
   const SPOTS = ['Pool deck', 'Martini Bar', 'Sunset Bar', 'Lounge', 'Dinner', 'Show', 'Casino', 'Cabin', 'Ashore', 'Other'];
+  const EMOJI = ['🦈', '🐬', '🐙', '🦀', '🐠', '🐢', '🦜', '🌴', '⚓', '🍍', '🥥', '🌞'];
+  const MAX_PEOPLE = 6;
+
+  // ---------- people: stable slots, so old entries keep their owner even if someone is hidden ----------
+  function normalizePeople() {
+    if (!Array.isArray(S.people) || !S.people.length) S.people = [{ name: 'Me' }];
+    S.people = S.people.slice(0, MAX_PEOPLE).map(p => typeof p === 'string' ? { name: p, emoji: '', hidden: false } : Object.assign({ name: '', emoji: '', hidden: false }, p));
+    if (S.people.every(p => p.hidden)) S.people[0].hidden = false;
+  }
+  normalizePeople();
+  const nameOf = p => (S.people[p] && S.people[p].name) || `Person ${p + 1}`;
+  const labelOf = p => ((S.people[p] && S.people[p].emoji) ? S.people[p].emoji + ' ' : '') + nameOf(p);
+  const visibleIdx = () => S.people.map((_, i) => i).filter(i => !S.people[i].hidden);
+  const freeSlot = () => { const h = S.people.findIndex((x, i) => x.hidden && !E.some(e => (e.p || 0) === i)); return h >= 0 ? h : S.people.length < MAX_PEOPLE ? S.people.length : -1; };
+  const canAdd = () => freeSlot() >= 0;
+  const shownIn = list => { const v = visibleIdx(); list.forEach(e => { const p = e.p || 0; if (!v.includes(p)) v.push(p); }); return v.sort((a, b) => a - b); };
 
   // ---------- dates: a cruise day runs from the cutoff hour to the cutoff hour next morning ----------
   const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -61,8 +77,11 @@
   const money = n => '$' + Math.round(n).toLocaleString();
   const toInput = ts => { const d = new Date(ts); return `${ymd(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
   const fromInput = v => { if (!v) return null; const [a, b] = v.split('T'); const { y, m, d } = parse(a); const [hh, mm] = (b || '0:0').split(':').map(Number); return new Date(y, m - 1, d, hh || 0, mm || 0).getTime(); };
-  const people = () => (S.people && S.people.length ? S.people : ['Me']).map((p, i) => p || `Person ${i + 1}`);
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const hourLabel = h => { h = ((h % 24) + 24) % 24; return h === 0 ? '12 AM' : h < 12 ? h + ' AM' : h === 12 ? '12 PM' : (h - 12) + ' PM'; };
+  const fmtHour = h => { h = +h || 0; return h === 0 ? 'midnight' : h < 12 ? h + ' AM' : h === 12 ? 'noon' : (h - 12) + ' PM'; };
+  const joinNames = arr => arr.length < 2 ? arr.join('') : arr.slice(0, -1).join(', ') + ' & ' + arr[arr.length - 1];
+  const buzz = () => { try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* ignore */ } };
 
   // ---------- icons ----------
   const I = {
@@ -76,7 +95,9 @@
     copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
     drink: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16c0 5-3.6 8-8 8s-8-3-8-8zM12 13v6.5M8 20h8"/></svg>',
     water: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8c3.4 4.3 6.5 8 6.5 11.4a6.5 6.5 0 0 1-13 0C5.5 10.8 8.6 7.1 12 2.8z"/></svg>',
-    heart: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.3a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/></svg>'
+    cheers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h7l-.6 5.5a2.9 2.9 0 0 1-5.8 0zM6.5 12.4V19M4 19.5h5M14 4h7l-.6 5.5a2.9 2.9 0 0 1-5.8 0zM17.5 12.4V19M15 19.5h5"/></svg>',
+    person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 19.5c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M19 8v6M16 11h6"/></svg>',
+    pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>'
   };
 
   // ---------- theme ----------
@@ -89,6 +110,7 @@
 
   // ---------- data helpers ----------
   const forDay = k => E.filter(e => dayKey(e.t) === k);
+  const tripEntries = () => E.filter(e => inTrip(dayKey(e.t)));
   const byPerson = (list, p) => list.filter(e => (e.p || 0) === p);
   function stats(list) {
     const drinks = list.filter(e => e.kind === 'drink');
@@ -124,6 +146,7 @@
     const el = document.createElement('div');
     el.className = 'overlay';
     el.innerHTML = html;
+    $('#toast').hidden = true;
     let pushed = false;
     try { history.pushState({ siplog: stack.length + 1 }, ''); pushed = true; } catch (e) { pushed = false; }
     layer.appendChild(el);
@@ -169,10 +192,11 @@
   }
 
   // ---------- navigation ----------
-  const VIEWS = ['log', 'trip', 'settings'];
+  const VIEWS = ['log', 'trip', 'stats', 'settings'];
   let view = 'log';
   let sel = curKey();
-  let tripWho = -1;
+  let tripWho = -1, tlWho = -1, statsScope = 'trip';
+  let lastRound = null;
   function go(v) {
     view = v;
     VIEWS.forEach(x => { $('#v-' + x).hidden = x !== v; });
@@ -183,6 +207,7 @@
   function render() {
     if (view === 'log') renderLog();
     else if (view === 'trip') renderTrip();
+    else if (view === 'stats') renderStats();
     else renderSettings();
   }
 
@@ -190,7 +215,8 @@
   function renderLog() {
     const k = sel, cur = curKey(), isToday = k === cur;
     const list = forDay(k);
-    const ppl = people();
+    const vis = visibleIdx();
+    const compact = vis.length >= 3;
     const i = dayIndex(k);
     let h = '';
     if (!S.setupDone) h += setupHTML();
@@ -203,7 +229,9 @@
       <button class="icon-btn" type="button" data-act="nextday" aria-label="Next day" ${k >= cur ? 'disabled' : ''}>${I.right}</button>
     </div>
     ${isToday ? '' : '<button class="btn small back-today" type="button" data-act="today">Back to today</button>'}
-    <div class="people">${ppl.map((name, p) => tileHTML(name, p, byPerson(list, p), isToday, k)).join('')}</div>
+    ${isToday && vis.length >= 2 ? `<div class="roundbar" role="group" aria-label="Log for several people at once"><button class="btn small" type="button" data-act="round" data-kind="drink">${I.cheers}Round of drinks</button><button class="btn small" type="button" data-act="round" data-kind="water">${I.water}Water round</button></div>` : ''}
+    <div class="people ${compact ? 'compact' : ''}">${vis.map(p => tileHTML(p, byPerson(list, p), isToday, k, compact)).join('')}</div>
+    ${canAdd() ? `<button class="btn small addp" type="button" data-act="person-new">${I.person}Add a person</button>` : ''}
     <section class="card" aria-label="Day at a glance">
       <div class="section-head"><h2>Day at a glance</h2><div class="legend"><span><i class="sw drink dot"></i>Drinks</span><span><i class="sw water dia"></i>Water</span></div></div>
       <div class="chartbox" id="glance"></div>
@@ -214,30 +242,39 @@
     $('#v-log').innerHTML = h;
     drawGlance(k, list);
   }
-  const fmtHour = h => { h = +h || 0; return h === 0 ? 'midnight' : h < 12 ? h + ' AM' : h === 12 ? 'noon' : (h - 12) + ' PM'; };
 
   function setupHTML() {
+    const ppl = S.people.map(p => p.name).concat(['', '', '', '']).slice(0, 4);
     return `<div class="setup">
       <p class="eyebrow">Set up your cruise</p>
       <h2>Which day is Day 1?</h2>
-      <p>Pick the date you boarded so every day gets its cruise-day number. You can change this and add ports later in Settings.</p>
+      <p>Pick the date you boarded so every day gets its cruise-day number, then name everyone you're tracking. You can change all of this later.</p>
       <div class="grid2">
         <label class="field" for="su-start"><span>Day 1 (boarding day)</span><input id="su-start" type="date" value="${esc(S.start)}"></label>
         <label class="field" for="su-days"><span>Cruise length (days)</span><input id="su-days" type="number" min="1" max="60" inputmode="numeric" value="${esc(S.days)}"></label>
-        <label class="field" for="su-p0"><span>Person 1</span><input id="su-p0" value="${esc(S.people[0] || '')}" placeholder="Me" maxlength="16"></label>
-        <label class="field" for="su-p1"><span>Person 2 (optional)</span><input id="su-p1" value="${esc(S.people[1] || '')}" placeholder="Leave blank if just you" maxlength="16"></label>
+        ${ppl.map((n, i) => `<label class="field" for="su-p${i}"><span>Person ${i + 1}${i ? ' (optional)' : ''}</span><input id="su-p${i}" value="${esc(n)}" placeholder="${i === 0 ? 'Me' : 'Optional'}" maxlength="16" autocomplete="off"></label>`).join('')}
       </div>
       <div class="btn-row"><button class="btn go" type="button" data-act="setup-save">Start logging</button></div>
     </div>`;
   }
 
-  function tileHTML(name, p, list, isToday, k) {
+  function tileHTML(p, list, isToday, k, compact) {
     const st = stats(list);
     const goal = +S.waterGoal || 0, lim = +S.limit || 0;
     const open = st.open[st.open.length - 1];
     const ln = isToday ? lastNamed(p) : null;
-    return `<div class="tile">
-      <div class="who"><b>${esc(name)}</b>${st.std ? `<span class="muted small">≈${fmt1(st.std)} std</span>` : ''}</div>
+    const nameBtn = `<button class="namebtn" type="button" data-act="person-edit" data-p="${p}" aria-label="Rename ${esc(nameOf(p))}"><span class="nm">${esc(labelOf(p))}</span><span class="pen" aria-hidden="true">${I.pencil}</span></button>`;
+    const actions = isToday
+      ? (compact
+        ? `<div class="btn2"><button class="big drink" type="button" data-act="add-drink" data-p="${p}">${I.plus}Drink</button><button class="big water" type="button" data-act="add-water" data-p="${p}">${I.plus}Water</button></div>`
+        : `<button class="big drink" type="button" data-act="add-drink" data-p="${p}">${I.plus}Drink</button><button class="big water" type="button" data-act="add-water" data-p="${p}">${I.plus}Water</button>`) +
+        `<div class="mini-row">
+          <button class="mini" type="button" data-act="start-drink" data-p="${p}">${I.timer}<span>${compact ? 'Ordered' : 'Just ordered'}</span></button>
+          ${ln ? `<button class="mini" type="button" data-act="again" data-p="${p}" data-id="${ln.id}" title="Log another ${esc(ln.name)}">${I.again}<span>${esc(ln.name)}</span></button>` : ''}
+        </div>`
+      : `<button class="btn small" type="button" data-act="add-past" data-p="${p}">Add to ${esc(dayName(k))}</button>`;
+    return `<div class="tile ${compact ? 'compact' : ''}">
+      <div class="who">${nameBtn}${st.std ? `<span class="muted small">≈${fmt1(st.std)} std</span>` : ''}</div>
       <div class="figs">
         <div class="fig drink"><span class="v">${st.drinks}${lim ? `<span class="of">/${lim}</span>` : ''}</span><span class="k"><i></i>${st.drinks === 1 ? 'drink' : 'drinks'}</span></div>
         <div class="fig water"><span class="v">${st.waters}${goal ? `<span class="of">/${goal}</span>` : ''}</span><span class="k"><i></i>water</span></div>
@@ -245,13 +282,7 @@
       ${lim ? `<div class="meter drinkm ${st.drinks > lim ? 'over' : ''}" role="img" aria-label="${st.drinks} of ${lim} drinks"><i style="width:${Math.min(100, st.drinks / lim * 100)}%"></i></div>` : ''}
       ${goal ? `<div class="meter" role="img" aria-label="${st.waters} of ${goal} waters"><i style="width:${Math.min(100, st.waters / goal * 100)}%"></i></div>` : ''}
       ${open ? `<div class="sipping"><p>Sipping <b>${esc(open.name || 'a drink')}</b> · <span data-dur="${open.start || open.t}">${fmtDur((Date.now() - (open.start || open.t)) / 60000)}</span></p><button class="btn small" type="button" data-act="finish" data-id="${open.id}">${I.check}Finished</button></div>` : ''}
-      ${isToday ? `
-        <button class="big drink" type="button" data-act="add-drink" data-p="${p}">${I.plus}Drink</button>
-        <button class="big water" type="button" data-act="add-water" data-p="${p}">${I.plus}Water</button>
-        <div class="mini-row">
-          <button class="mini" type="button" data-act="start-drink" data-p="${p}">${I.timer}<span>Just ordered</span></button>
-          ${ln ? `<button class="mini" type="button" data-act="again" data-p="${p}" data-id="${ln.id}" title="Log another ${esc(ln.name)}">${I.again}<span>${esc(ln.name)}</span></button>` : ''}
-        </div>` : `<button class="btn small" type="button" data-act="add-past" data-p="${p}">Add to ${esc(dayName(k))}</button>`}
+      ${actions}
       <p class="lastline">${st.last ? `Last drink ${fmtTime(st.last.t)}${isToday ? ` · <span data-ago="${st.last.t}">${ago(st.last.t)}</span>` : ''}` : 'No drinks yet'}${st.pace ? ` · one every ${fmtDur(st.pace)}` : ''}</p>
       ${isToday && st.drinks - st.waters >= 2 ? `<p class="nudge">${st.drinks - st.waters} drinks ahead of water. Time for a bottle?</p>` : ''}
     </div>`;
@@ -260,10 +291,10 @@
   // Day at a glance: one row per person, drinks (circles) and water (diamonds) on a clock axis
   function drawGlance(k, list) {
     const box = $('#glance'); if (!box) return;
-    const ppl = people();
+    const rows = shownIn(list);
     const W = Math.max(260, box.clientWidth || 340);
-    const left = Math.min(84, Math.max(48, Math.max(...ppl.map(n => n.length)) * 7 + 10)), right = 12, top = 20, row = 34;
-    const H = top + ppl.length * row + 8;
+    const left = Math.min(92, Math.max(48, Math.max(...rows.map(p => labelOf(p).length)) * 7 + 12)), right = 12, top = 20, row = 34;
+    const H = top + rows.length * row + 8;
     const t0 = dayStart(k), t1 = t0 + 24 * 3600e3;
     const x = t => left + (t - t0) / (t1 - t0) * (W - left - right);
     let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Timeline of drinks and water for ${esc(dayName(k))}">`;
@@ -273,15 +304,16 @@
       const xx = x(t0 + hr * 3600e3);
       s += `<line class="grid-l" x1="${xx}" x2="${xx}" y1="${top - 4}" y2="${H - 6}"/><text class="axis-t" x="${xx}" y="${top - 8}" text-anchor="middle">${clock === 0 ? '12a' : clock === 12 ? '12p' : clock < 12 ? clock + 'a' : (clock - 12) + 'p'}</text>`;
     }
-    ppl.forEach((name, p) => {
-      const cy = top + p * row + row / 2;
-      s += `<line class="grid-l" x1="${left}" x2="${W - right}" y1="${cy}" y2="${cy}"/><text class="axis-l" x="${left - 8}" y="${cy + 4}" text-anchor="end">${esc(name.length > 10 ? name.slice(0, 9) + '…' : name)}</text>`;
+    rows.forEach((p, r) => {
+      const cy = top + r * row + row / 2, lab = labelOf(p);
+      s += `<line class="grid-l" x1="${left}" x2="${W - right}" y1="${cy}" y2="${cy}"/><text class="axis-l" x="${left - 8}" y="${cy + 4}" text-anchor="end">${esc(lab.length > 11 ? lab.slice(0, 10) + '…' : lab)}</text>`;
     });
     const now = Date.now();
     if (now > t0 && now < t1) s += `<line x1="${x(now)}" x2="${x(now)}" y1="${top - 4}" y2="${H - 6}" stroke="var(--ink)" stroke-width="1" opacity=".5"/>`;
     list.slice().sort((a, b) => a.t - b.t).forEach(e => {
-      const cy = top + (e.p || 0) * row + row / 2, cx = x(Math.min(Math.max(e.t, t0), t1));
-      const label = `${fmtTime(e.t)} · ${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ' (sipping)' : ''} · ${people()[e.p || 0]}`;
+      const r = rows.indexOf(e.p || 0);
+      const cy = top + r * row + row / 2, cx = x(Math.min(Math.max(e.t, t0), t1));
+      const label = `${fmtTime(e.t)} · ${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ' (sipping)' : ''} · ${nameOf(e.p || 0)}`;
       const mark = e.kind === 'water'
         ? `<rect class="mk m-water" x="${cx - 4.5}" y="${cy - 4.5}" width="9" height="9" transform="rotate(45 ${cx} ${cy})"/>`
         : `<circle class="mk ${e.open ? 'm-open' : 'm-drink'}" cx="${cx}" cy="${cy}" r="5.5"/>`;
@@ -291,7 +323,7 @@
     box.innerHTML = s;
     bindTips(box, el => {
       const e = E.find(x => x.id === el.dataset.id); if (!e) return null;
-      return [fmtTime(e.t), `${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ', still sipping' : ''}`, people()[e.p || 0], e.kind === 'water' ? 'water' : 'drink'];
+      return [fmtTime(e.t), `${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ', still sipping' : ''}`, nameOf(e.p || 0), e.kind === 'water' ? 'water' : 'drink'];
     });
   }
   function bindTips(box, content) {
@@ -319,8 +351,11 @@
   }
 
   function timelineHTML(list, k, isToday) {
-    const sorted = list.slice().sort((a, b) => b.t - a.t);
-    const ppl = people();
+    const whoList = shownIn(list);
+    if (tlWho >= 0 && !whoList.includes(tlWho)) tlWho = -1;
+    const mine = tlWho >= 0 ? byPerson(list, tlWho) : list;
+    const sorted = mine.slice().sort((a, b) => b.t - a.t);
+    const multi = whoList.length > 1;
     let rows = '';
     sorted.forEach((e, idx) => {
       if (idx > 0) {
@@ -338,27 +373,29 @@
         <time datetime="${new Date(e.t).toISOString()}">${fmtTime(e.t)}</time>
         <span class="tl-ico ${isW ? 'water' : 'drink'}" aria-hidden="true">${isW ? I.water : I.drink}</span>
         <span class="tl-main"><b>${esc(isW ? 'Water' : (e.name || 'Drink'))}${e.fav ? ' <span style="color:var(--drink)" aria-label="favorite">♥</span>' : ''}${e.open ? '<span class="badge-sip">Sipping</span>' : ''}</b>
-          <span>${ppl.length > 1 ? `<span class="who-chip">${esc(ppl[e.p || 0] || '')}</span>` : ''}${esc(bits.join(' · '))}</span></span>
+          <span>${multi ? `<span class="who-chip">${esc(labelOf(e.p || 0))}</span>` : ''}${esc(bits.join(' · '))}</span></span>
         <span class="tl-side">${isW ? '' : '≈' + fmt1(+e.std || 0)}</span>
       </button></li>`;
     });
-    return `<section aria-label="Timeline">
-      <div class="section-head"><h2>Timeline</h2><button class="linkish" type="button" data-act="add-past" data-p="-1">${isToday ? 'Add an earlier one' : 'Add to this day'}</button></div>
-      ${sorted.length ? `<ul class="tl">${rows}</ul>` : `<div class="empty"><p>${isToday ? 'Nothing logged yet today.' : 'Nothing logged on this day.'}</p><p class="small">Each tap on + Drink or + Water records the time. Tap any entry later to add a name, change the time, or note where you were.</p></div>`}
+    const filter = multi && list.length ? `<div class="chips" role="group" aria-label="Show entries for">${[[-1, 'Everyone']].concat(whoList.map(p => [p, labelOf(p)])).map(([v, l]) => `<button class="chip" type="button" data-act="tlwho" data-v="${v}" aria-pressed="${tlWho === v}">${esc(l)}</button>`).join('')}</div>` : '';
+    return `<section aria-label="Timeline" style="display:grid;gap:10px">
+      <div class="section-head"><h2>Timeline</h2><button class="linkish" type="button" data-act="add-past" data-p="${tlWho >= 0 ? tlWho : -1}">${isToday ? 'Add an earlier one' : 'Add to this day'}</button></div>
+      ${filter}
+      ${sorted.length ? `<ul class="tl">${rows}</ul>` : `<div class="empty"><p>${list.length ? 'Nothing logged for this person on this day.' : isToday ? 'Nothing logged yet today.' : 'Nothing logged on this day.'}</p><p class="small">Each tap on + Drink or + Water records the time. Tap any entry later to add a name, change the time, or note where you were.</p></div>`}
     </section>`;
   }
 
   function summaryHTML(k, list) {
     if (!list.length) return '';
-    const ppl = people();
-    const rows = ppl.map((n, p) => {
+    const who = shownIn(list);
+    const rows = who.map(p => {
       const st = stats(byPerson(list, p));
-      return `<tr><td>${esc(n)}</td><td>${st.drinks}</td><td>${fmt1(st.std)}</td><td>${st.waters}</td><td>${st.ml ? fmt1(st.ml / 1000) + ' L' : '–'}</td></tr>`;
+      return `<tr><td>${esc(labelOf(p))}</td><td>${st.drinks}</td><td>${fmt1(st.std)}</td><td>${st.waters}</td><td>${st.ml ? fmt1(st.ml / 1000) + ' L' : '–'}</td></tr>`;
     }).join('');
-    const firstLast = ppl.map((n, p) => {
+    const firstLast = who.map(p => {
       const st = stats(byPerson(list, p));
       if (!st.drinks) return '';
-      return `<p class="small"><b>${esc(n)}:</b> first drink ${st.first ? fmtTime(st.first.t) : '–'}, last ${st.last ? fmtTime(st.last.t) : '–'}${st.pace ? `, about one every ${fmtDur(st.pace)}` : ''}${st.waters ? `, ${fmt1(st.waters / Math.max(1, st.drinks))} waters per drink` : ''}.</p>`;
+      return `<p class="small"><b>${esc(nameOf(p))}:</b> first drink ${st.first ? fmtTime(st.first.t) : '–'}, last ${st.last ? fmtTime(st.last.t) : '–'}${st.pace ? `, about one every ${fmtDur(st.pace)}` : ''}${st.waters ? `, ${fmt1(st.waters / st.drinks)} ${st.waters === st.drinks ? 'water' : 'waters'} per drink` : ''}.</p>`;
     }).join('');
     return `<section class="card" aria-label="Day summary">
       <div class="section-head"><h2>${esc(dayName(k))} summary</h2><button class="btn small" type="button" data-act="copy-day">${I.copy}Copy</button></div>
@@ -368,65 +405,145 @@
   }
 
   function dayText(k) {
-    const ppl = people(), list = forDay(k).sort((a, b) => a.t - b.t);
+    const list = forDay(k).sort((a, b) => a.t - b.t);
     const lines = [`Sip Log · ${dayName(k)} · ${dateLabel(k, { weekday: 'long', month: 'short', day: 'numeric' })}${portOf(k) ? ' · ' + portOf(k) : ''}`];
-    ppl.forEach((n, p) => {
+    shownIn(list).forEach(p => {
       const mine = byPerson(list, p), st = stats(mine);
       if (!mine.length) return;
-      lines.push('', `${n}: ${st.drinks} drinks (≈${fmt1(st.std)} std), ${st.waters} waters (${volume(st.ml)})`);
+      lines.push('', `${labelOf(p)}: ${st.drinks} drinks (≈${fmt1(st.std)} std), ${st.waters} waters (${volume(st.ml)})`);
       mine.forEach(e => lines.push(`  ${fmtTime(e.t)}  ${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ' (sipping)' : ''}${e.start && !e.open ? ` (ordered ${fmtTime(e.start)})` : ''}${e.where ? ' @ ' + e.where : ''}`));
     });
     return lines.join('\n');
   }
 
   // ---------- quick actions ----------
-  function addEntry(entry, msg) {
-    E.push(entry); saveE();
+  function addEntries(entries, msg, details) {
+    entries.forEach(e => E.push(e)); saveE(); buzz();
     render();
-    const acts = [['Undo', () => { E = E.filter(x => x.id !== entry.id); saveE(); render(); }]];
-    if (entry.kind === 'drink') acts.unshift(['Add details', () => openEditor(entry.id, { focusName: true })]);
+    const ids = new Set(entries.map(e => e.id));
+    const acts = [['Undo', () => { E = E.filter(x => !ids.has(x.id)); saveE(); render(); }]];
+    if (details) acts.unshift(['Add details', () => openEditor(entries[0].id, { focusName: true })]);
     toast(msg, acts);
   }
+  const newDrink = (p, extra) => Object.assign({ id: uid(), kind: 'drink', p, t: Date.now(), start: null, open: false, name: '', std: 1.5, where: '', fav: false, note: '' }, extra || {});
+  const newWater = (p, t) => { const u = WATER[S.waterUnit] ? S.waterUnit : 'bottle'; return { id: uid(), kind: 'water', p, t: t || Date.now(), unit: u, ml: WATER[u][1], note: '' }; };
   function quickDrink(p) {
     const st = stats(byPerson(forDay(curKey()), p));
-    addEntry({ id: uid(), kind: 'drink', p, t: Date.now(), start: null, open: false, name: '', std: 1.5, where: '', fav: false, note: '' }, `Drink ${st.drinks + 1} for ${people()[p]} at ${fmtTime(Date.now())}`);
+    addEntries([newDrink(p)], `Drink ${st.drinks + 1} for ${nameOf(p)} at ${fmtTime(Date.now())}`, true);
   }
   function quickWater(p) {
     const st = stats(byPerson(forDay(curKey()), p));
-    const u = WATER[S.waterUnit] ? S.waterUnit : 'bottle';
-    addEntry({ id: uid(), kind: 'water', p, t: Date.now(), unit: u, ml: WATER[u][1], note: '' }, `Water ${st.waters + 1} for ${people()[p]}`);
+    addEntries([newWater(p)], `Water ${st.waters + 1} for ${nameOf(p)}`);
   }
   function startDrink(p) {
     const now = Date.now();
-    addEntry({ id: uid(), kind: 'drink', p, t: now, start: now, open: true, name: '', std: 1.5, where: '', fav: false, note: '' }, `Timer started for ${people()[p]}. Tap Finished when it's done.`);
+    addEntries([newDrink(p, { t: now, start: now, open: true })], `Timer started for ${nameOf(p)}. Tap Finished when it's done.`, true);
   }
   function again(p, id) {
     const src = E.find(e => e.id === id); if (!src) return;
     const st = stats(byPerson(forDay(curKey()), p));
-    addEntry({ id: uid(), kind: 'drink', p, t: Date.now(), start: null, open: false, name: src.name, std: src.std || 1.5, where: src.where || '', fav: false, note: '' }, `${src.name} (drink ${st.drinks + 1}) for ${people()[p]}`);
+    addEntries([newDrink(p, { name: src.name, std: src.std || 1.5, where: src.where || '' })], `${src.name} (drink ${st.drinks + 1}) for ${nameOf(p)}`);
   }
   function finish(id) {
     const e = E.find(x => x.id === id); if (!e) return;
-    const prev = { t: e.t, open: e.open };
+    const prev = { t: e.t, open: e.open, start: e.start };
     e.open = false; e.t = Date.now(); if (!e.start) e.start = prev.t;
-    saveE(); render();
-    toast(`Finished after ${fmtDur((e.t - e.start) / 60000)}`, [['Undo', () => { e.t = prev.t; e.open = prev.open; saveE(); render(); }]]);
+    saveE(); buzz(); render();
+    toast(`Finished after ${fmtDur((e.t - e.start) / 60000)}`, [['Undo', () => { e.t = prev.t; e.open = prev.open; e.start = prev.start; saveE(); render(); }]]);
   }
 
-  // ---------- editor ----------
+  // Round: one tap logs a drink or a water for everyone selected
+  function openRound(kind) {
+    const vis = visibleIdx();
+    const chosen = new Set((lastRound || vis).filter(p => vis.includes(p)));
+    if (!chosen.size) vis.forEach(p => chosen.add(p));
+    let name = '';
+    const el = openOverlay(`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="rd-title">
+      <div class="panel-bar"><h2 id="rd-title">${kind === 'water' ? 'Water for the table' : 'Round of drinks'}</h2><button class="icon-btn" type="button" data-act="close" aria-label="Close">${I.x}</button></div>
+      <div id="rd-body" style="display:grid;gap:16px"></div></div>`);
+    const body = $('#rd-body', el);
+    const draw = () => {
+      body.innerHTML = `
+        <div class="field"><span>Who's in?</span><div class="chips">${vis.map(p => `<button class="chip" type="button" data-rd="p" data-v="${p}" aria-pressed="${chosen.has(p)}">${esc(labelOf(p))}</button>`).join('')}</div></div>
+        ${kind === 'drink' ? `<label class="field" for="rd-name"><span>Same drink for everyone? (optional)</span><input id="rd-name" value="${esc(name)}" placeholder="e.g. Champagne toast" autocomplete="off"></label><p class="muted small">Leave it blank and add names one by one later from the timeline.</p>` : ''}
+        <button class="big ${kind === 'water' ? 'water' : 'drink'}" type="button" data-rd="go" ${chosen.size ? '' : 'disabled'}>${kind === 'water' ? I.water : I.cheers}Log ${chosen.size} ${kind === 'water' ? (chosen.size === 1 ? 'water' : 'waters') : (chosen.size === 1 ? 'drink' : 'drinks')}</button>`;
+    };
+    body.addEventListener('click', ev => {
+      const b = ev.target.closest('[data-rd]'); if (!b) return;
+      const nm = $('#rd-name', body); if (nm) name = nm.value.trim();
+      if (b.dataset.rd === 'p') { const p = +b.dataset.v; if (chosen.has(p)) chosen.delete(p); else chosen.add(p); draw(); return; }
+      if (b.dataset.rd === 'go' && chosen.size) {
+        lastRound = [...chosen];
+        const now = Date.now();
+        const ps = [...chosen].sort((a, c) => a - c);
+        const items = ps.map(p => kind === 'water' ? newWater(p, now) : newDrink(p, { t: now, name, std: stdFor(name) || 1.5 }));
+        closeTop();
+        addEntries(items, `${kind === 'water' ? 'Water' : (name || 'Round')} logged for ${joinNames(ps.map(nameOf))}`);
+      }
+    });
+    draw();
+  }
+
+  // ---------- people editor ----------
+  function openPerson(p) {
+    const isNew = p == null;
+    const cur = isNew ? { name: '', emoji: '', hidden: false } : Object.assign({}, S.people[p]);
+    const others = S.people.filter((x, i) => i !== p && !x.hidden).length;
+    const el = openOverlay(`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="pe-title">
+      <div class="panel-bar"><h2 id="pe-title">${isNew ? 'Add a person' : 'Edit ' + esc(nameOf(p))}</h2><button class="icon-btn" type="button" data-act="close" aria-label="Close">${I.x}</button></div>
+      <div id="pe-body" style="display:grid;gap:16px"></div></div>`);
+    const body = $('#pe-body', el);
+    let armed = 0;
+    const draw = () => {
+      body.innerHTML = `
+        <label class="field" for="pe-name"><span>Name</span><input id="pe-name" value="${esc(cur.name)}" placeholder="e.g. Sam" maxlength="16" autocomplete="off" data-autofocus></label>
+        <div class="field"><span>Emoji (optional, makes the timeline easier to scan)</span><div class="chips">${['' ].concat(EMOJI).map(em => `<button class="chip emo" type="button" data-pe="emoji" data-v="${em}" aria-pressed="${cur.emoji === em}" aria-label="${em ? 'Emoji ' + em : 'No emoji'}">${em || 'None'}</button>`).join('')}</div></div>
+        <div class="btn-row"><button class="btn navy" type="button" data-pe="save">${isNew ? 'Add to the log' : 'Save'}</button>
+        ${!isNew && others ? `<button class="btn danger" type="button" data-pe="hide">${armed ? 'Tap again to remove' : 'Remove from counters'}</button>` : ''}</div>
+        ${!isNew && others ? '<p class="muted small">Removing hides their counters but keeps everything they logged in the history.</p>' : ''}`;
+    };
+    body.addEventListener('click', ev => {
+      const b = ev.target.closest('[data-pe]'); if (!b) return;
+      const nm = $('#pe-name', body); cur.name = nm.value.trim();
+      const a = b.dataset.pe;
+      if (a !== 'hide') armed = 0;
+      if (a === 'emoji') { cur.emoji = b.dataset.v; draw(); const n = $('#pe-name', body); if (n) n.value = cur.name; return; }
+      if (a === 'save') {
+        if (!cur.name) { nm.focus(); nm.placeholder = 'Type a name first'; return; }
+        if (isNew) {
+          // someone removed earlier with the same name gets their history back
+          let slot = S.people.findIndex(x => x.hidden && norm(x.name) === norm(cur.name));
+          if (slot < 0) slot = freeSlot();
+          if (slot < 0) { toast(`Sip Log tracks up to ${MAX_PEOPLE} people. Show a hidden person again in Settings instead.`); return; }
+          S.people[slot] = { name: cur.name, emoji: cur.emoji, hidden: false };
+        } else Object.assign(S.people[p], { name: cur.name, emoji: cur.emoji });
+        saveS(); closeTop(); render();
+        toast(isNew ? `${cur.name} added` : 'Saved');
+        return;
+      }
+      if (a === 'hide') {
+        if (!armed) { armed = 1; draw(); return; }
+        S.people[p].hidden = true; saveS(); closeTop(); render();
+        toast(`${nameOf(p)} removed from the counters`, [['Undo', () => { S.people[p].hidden = false; saveS(); render(); }]]);
+      }
+    });
+    draw();
+  }
+
+  // ---------- entry editor ----------
   function openEditor(id, opts) {
     opts = opts || {};
     const existing = id ? E.find(e => e.id === id) : null;
-    const ppl = people();
     let d;
     if (existing) d = JSON.parse(JSON.stringify(existing));
     else {
       const base = opts.day && opts.day !== curKey() ? dayStart(opts.day) + (20 - (+S.cutoff || 0)) * 3600e3 : Date.now();
-      d = { id: uid(), kind: opts.kind || 'drink', p: opts.p >= 0 ? opts.p : 0, t: base, start: null, open: false, name: '', std: 1.5, where: '', fav: false, note: '', unit: S.waterUnit, ml: (WATER[S.waterUnit] || WATER.bottle)[1] };
+      d = { id: uid(), kind: opts.kind || 'drink', p: opts.p >= 0 ? opts.p : visibleIdx()[0], t: base, start: null, open: false, name: '', std: 1.5, where: '', fav: false, note: '', unit: S.waterUnit, ml: (WATER[S.waterUnit] || WATER.bottle)[1] };
     }
     if (!d.unit) d.unit = S.waterUnit;
     if (!d.ml) d.ml = (WATER[d.unit] || WATER.bottle)[1];
     if (d.std == null) d.std = 1.5;
+    const whoChoices = () => { const v = visibleIdx(); if (!v.includes(d.p || 0)) v.push(d.p || 0); return v.sort((a, b) => a - b); };
     const el = openOverlay(`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="ed-title"><div class="panel-bar"><h2 id="ed-title">${existing ? 'Edit entry' : 'Add an entry'}</h2><button class="icon-btn" type="button" data-act="close" aria-label="Close">${I.x}</button></div><div id="ed-body" style="display:grid;gap:16px"></div></div>`, { onClose: () => render() });
     const body = $('#ed-body', el);
     let delArmed = 0;
@@ -438,14 +555,15 @@
     };
     const draw = () => {
       const isW = d.kind === 'water';
+      const who = whoChoices();
       body.innerHTML = `
         <div class="seg" role="group" aria-label="Type"><button type="button" data-ed="kind" data-v="drink" aria-pressed="${!isW}">Drink</button><button type="button" data-ed="kind" data-v="water" aria-pressed="${isW}">Water</button></div>
-        ${ppl.length > 1 ? `<div class="field"><span>Who</span><div class="chips">${ppl.map((n, p) => `<button class="chip" type="button" data-ed="p" data-v="${p}" aria-pressed="${(d.p || 0) === p}">${esc(n)}</button>`).join('')}</div></div>` : ''}
+        ${who.length > 1 ? `<div class="field"><span>Who</span><div class="chips">${who.map(p => `<button class="chip" type="button" data-ed="p" data-v="${p}" aria-pressed="${(d.p || 0) === p}">${esc(labelOf(p))}</button>`).join('')}</div></div>` : ''}
         ${isW ? `
           <div class="field"><span>How much</span><div class="chips">${Object.entries(WATER).map(([k, [l, ml, oz]]) => `<button class="chip" type="button" data-ed="unit" data-v="${k}" aria-pressed="${d.unit === k}">${l} · ${oz}</button>`).join('')}</div></div>
           <label class="field" for="ed-t"><span>Time</span><span class="inline"><input id="ed-t" type="datetime-local" value="${toInput(d.t)}"><button class="btn small" type="button" data-ed="now">Now</button></span></label>
         ` : `
-          <label class="field" for="ed-name"><span>Drink name (optional)</span><input id="ed-name" value="${esc(d.name || '')}" placeholder="e.g. Coconut Patrón Margarita" autocomplete="off" ${opts.focusName ? 'data-autofocus' : ''}></label>
+          <label class="field" for="ed-name"><span>Drink name (optional)</span><input id="ed-name" value="${esc(d.name || '')}" placeholder="e.g. Coconut Patrón Margarita" autocomplete="off"></label>
           <div class="sugg" id="ed-sugg" hidden></div>
           <div class="field"><span>Status</span><div class="seg" role="group" aria-label="Status"><button type="button" data-ed="open" data-v="0" aria-pressed="${!d.open}">Finished</button><button type="button" data-ed="open" data-v="1" aria-pressed="${!!d.open}">Still sipping</button></div></div>
           ${d.open ? '' : `<label class="field" for="ed-t"><span>Finished at</span><span class="inline"><input id="ed-t" type="datetime-local" value="${toInput(d.t)}"><button class="btn small" type="button" data-ed="now">Now</button></span></label>`}
@@ -539,30 +657,31 @@
     const cur = curKey();
     const list = [...keys].filter(k => k <= cur || forDay(k).length).sort();
     if (!list.includes(cur)) list.push(cur);
-    const ppl = people();
-    const el = openOverlay(`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="dp-title">
+    const vis = visibleIdx();
+    openOverlay(`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="dp-title">
       <div class="panel-bar"><h2 id="dp-title">Pick a day</h2><button class="icon-btn" type="button" data-act="close" aria-label="Close">${I.x}</button></div>
       <div class="daylist">${list.map(k => {
         const items = forDay(k), st = stats(items);
-        const who = ppl.length > 1 ? ppl.map((n, p) => { const s = stats(byPerson(items, p)); return `${n} ${s.drinks}`; }).join(' · ') : '';
+        const who = vis.length > 1 ? vis.map(p => `${nameOf(p)} ${stats(byPerson(items, p)).drinks}`).join(' · ') : '';
         return `<button type="button" data-act="pickday" data-k="${k}" aria-current="${k === sel}"><b>${esc(dayName(k))}${k === cur ? ' · Today' : ''}</b><span class="tot"><b>${st.drinks}</b> drinks<br>${st.waters} water</span><span>${esc(dateLabel(k))}${portOf(k) ? ' · ' + esc(portOf(k)) : ''}${who ? ' · ' + esc(who) : ''}</span></button>`;
       }).join('')}</div>
     </div>`);
-    return el;
   }
 
   // ---------- TRIP ----------
+  const tripFilt = list => tripWho < 0 ? list : byPerson(list, tripWho);
   function tripDays() {
     const out = [];
     for (let i = 0; i < (+S.days || 0); i++) out.push(keyAt(i));
     return out;
   }
   function renderTrip() {
-    const ppl = people();
     const days = tripDays();
     const cur = curKey();
-    const filt = list => tripWho < 0 ? list : byPerson(list, tripWho);
-    const all = filt(E.filter(e => inTrip(dayKey(e.t))));
+    const whoList = shownIn(tripEntries());
+    if (tripWho >= 0 && !whoList.includes(tripWho)) tripWho = -1;
+    const filt = tripFilt;
+    const all = filt(tripEntries());
     const st = stats(all);
     const elapsed = Math.max(1, Math.min(days.length, dayIndex(cur) + 1));
     const ratio = st.drinks ? st.waters / st.drinks : 0;
@@ -582,7 +701,7 @@
     const outside = E.filter(e => !inTrip(dayKey(e.t))).length;
     $('#v-trip').innerHTML = `
       <div class="section-head"><h2 style="font-family:var(--font-display);font-weight:400;font-size:26px">${esc(S.days)}-day cruise</h2><span class="muted small">${esc(dateLabel(days[0] || cur, { month: 'short', day: 'numeric' }))} – ${esc(dateLabel(days[days.length - 1] || cur, { month: 'short', day: 'numeric' }))}</span></div>
-      ${ppl.length > 1 ? `<div class="chips" role="group" aria-label="Show">${[['-1', 'Everyone']].concat(ppl.map((n, p) => [String(p), n])).map(([v, l]) => `<button class="chip" type="button" data-act="tripwho" data-v="${v}" aria-pressed="${String(tripWho) === v}">${esc(l)}</button>`).join('')}</div>` : ''}
+      ${whoList.length > 1 ? `<div class="chips" role="group" aria-label="Show">${[[-1, 'Everyone']].concat(whoList.map(p => [p, labelOf(p)])).map(([v, l]) => `<button class="chip" type="button" data-act="tripwho" data-v="${v}" aria-pressed="${tripWho === v}">${esc(l)}</button>`).join('')}</div>` : ''}
       <div class="stats">
         <div class="stat"><span class="k">Drinks</span><span class="v">${st.drinks}</span><span class="d">${fmt1(st.drinks / elapsed)} a day so far</span></div>
         <div class="stat"><span class="k">Standard drinks</span><span class="v">≈${fmt1(st.std)}</span><span class="d">${fmt1(st.std / elapsed)} a day</span></div>
@@ -598,8 +717,8 @@
       ${Object.keys(favs).length ? `<section class="card"><h2 style="font-size:18px">Favorites ♥</h2><div class="list">${top(favs).map(([n, c]) => `<div><span>${esc(n)}</span><span>×${c}</span></div>`).join('')}</div></section>` : ''}
       ${Object.keys(names).length ? `<section class="card"><h2 style="font-size:18px">Most ordered</h2><div class="list">${top(names).map(([n, c]) => `<div><span>${esc(n)}</span><span>×${c}</span></div>`).join('')}</div></section>` : ''}
       ${Object.keys(spots).length ? `<section class="card"><h2 style="font-size:18px">Favorite spots</h2><div class="list">${top(spots).map(([n, c]) => `<div><span>${esc(n)}</span><span>×${c}</span></div>`).join('')}</div></section>` : ''}
-      ${pkg ? `<section class="card"><h2 style="font-size:18px">Drink package value</h2><div class="list">${ppl.map((n, p) => { const s = stats(byPerson(E.filter(e => inTrip(dayKey(e.t))), p)); const value = s.drinks * price, paid = pkg * elapsed; return `<div><span>${esc(n)}: ≈${money(value)} of drinks</span><span>${money(paid)} paid so far</span></div>`; }).join('')}</div><p class="muted small">Uses ${money(price)} per drink and ${money(pkg)} per day, both editable in Settings.</p></section>` : ''}
-      <div class="btn-row"><button class="btn" type="button" data-act="copy-trip">${I.copy}Copy trip summary</button></div>
+      ${pkg ? `<section class="card"><h2 style="font-size:18px">Drink package value</h2><div class="list">${whoList.map(p => { const s = stats(byPerson(tripEntries(), p)); const value = s.drinks * price, paid = pkg * elapsed; return `<div><span>${esc(nameOf(p))}: ≈${money(value)} of drinks</span><span>${money(paid)} paid so far</span></div>`; }).join('')}</div><p class="muted small">Uses ${money(price)} per drink and ${money(pkg)} per day, both editable in Settings.</p></section>` : ''}
+      <div class="btn-row"><button class="btn" type="button" data-act="copy-trip">${I.copy}Copy trip summary</button><button class="btn" type="button" data-go="stats">See fun stats</button></div>
       ${backupNudge()}`;
     drawTripChart(days, filt, cur);
   }
@@ -609,9 +728,27 @@
     const r = Math.min(4, h, w / 2);
     return `M${x} ${y0}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + w - r}Q${x + w} ${y} ${x + w} ${y + r}V${y0}Z`;
   }
+  function chartTips(box, data, fmt, W) {
+    const tip = box.querySelector('.tip');
+    const show = el => {
+      const lines = fmt(data[+el.dataset.i]);
+      tip.textContent = '';
+      const st = document.createElement('strong'); st.textContent = lines[0]; tip.appendChild(st);
+      lines.slice(1).forEach(([c, txt]) => { const ln = document.createElement('div'); const key = document.createElement('span'); key.className = 'key'; key.style.background = `var(--${c})`; ln.appendChild(key); ln.appendChild(document.createTextNode(txt)); tip.appendChild(ln); });
+      tip.style.left = Math.min(Math.max(+el.dataset.tipX, 70), W - 70) + 'px';
+      tip.style.top = el.dataset.tipY + 'px';
+      tip.hidden = false;
+    };
+    $$('[data-tip-x]', box).forEach(el => {
+      el.addEventListener('pointerenter', () => show(el));
+      el.addEventListener('pointerleave', () => { tip.hidden = true; });
+      el.addEventListener('focus', () => show(el));
+      el.addEventListener('blur', () => { tip.hidden = true; });
+    });
+  }
   function drawTripChart(days, filt, cur) {
     const box = $('#tripchart'); if (!box || !days.length) return;
-    const data = days.map(k => { const s = stats(filt(forDay(k))); return { k, d: s.drinks, w: s.waters, future: k > cur }; });
+    const data = days.map(k => { const s = stats(filt(forDay(k))); return { k, d: s.drinks, w: s.waters }; });
     const W = Math.max(260, box.clientWidth || 340), H = 190;
     const left = 30, right = 6, top = 16, bottom = 30;
     const maxV = Math.max(4, ...data.map(v => Math.max(v.d, v.w)));
@@ -628,44 +765,27 @@
     data.forEach((v, i) => {
       const cx = left + band * i + band / 2;
       const xd = cx - bw - 1, xw = cx + 1;
-      s += `<g class="hitg">`;
-      s += `<rect class="hit" x="${left + band * i}" y="${top}" width="${band}" height="${ph + bottom}" tabindex="0" role="button" aria-label="${esc(`Day ${i + 1}: ${v.d} drinks, ${v.w} water`)}" data-act="pickday" data-k="${v.k}" data-tip-x="${cx}" data-tip-y="${Math.min(y(Math.max(v.d, v.w)), y0 - 10)}" data-i="${i}"/>`;
-      s += `<path class="mk" d="${barPath(xd, y(v.d), bw, y0 - y(v.d), y0)}" fill="var(--drink)"/><path class="mk" d="${barPath(xw, y(v.w), bw, y0 - y(v.w), y0)}" fill="var(--water)"/>`;
-      s += `</g>`;
+      s += `<g class="hitg"><rect class="hit" x="${left + band * i}" y="${top}" width="${band}" height="${ph + bottom}" tabindex="0" role="button" aria-label="${esc(`Day ${i + 1}: ${v.d} drinks, ${v.w} water`)}" data-act="pickday" data-k="${v.k}" data-tip-x="${cx}" data-tip-y="${Math.min(y(Math.max(v.d, v.w)), y0 - 10)}" data-i="${i}"/>`;
+      s += `<path class="mk" d="${barPath(xd, y(v.d), bw, y0 - y(v.d), y0)}" fill="var(--drink)"/><path class="mk" d="${barPath(xw, y(v.w), bw, y0 - y(v.w), y0)}" fill="var(--water)"/></g>`;
       if (v.d && v.d === maxD) s += `<text class="bar-label" x="${xd + bw / 2}" y="${y(v.d) - 5}" text-anchor="middle">${v.d}</text>`;
       s += `<text class="axis-t" x="${cx}" y="${H - 12}" text-anchor="middle" style="${v.k === cur ? 'font-weight:700;fill:var(--ink)' : ''}">${i + 1}</text>`;
     });
-    s += `<text class="axis-t" x="${left + pw / 2}" y="${H - 0}" text-anchor="middle">Cruise day</text>`;
+    s += `<text class="axis-t" x="${left + pw / 2}" y="${H}" text-anchor="middle">Cruise day</text>`;
     s += `<line x1="${left}" x2="${W - right}" y1="${y0}" y2="${y0}" stroke="var(--muted)" stroke-width="1"/>`;
     s += '</svg><div class="tip" hidden></div>';
     box.innerHTML = s;
-    const tip = box.querySelector('.tip');
-    const show = el => {
-      const v = data[+el.dataset.i];
-      tip.textContent = '';
-      const st = document.createElement('strong'); st.textContent = `Day ${+el.dataset.i + 1} · ${dateLabel(v.k, { month: 'short', day: 'numeric' })}`; tip.appendChild(st);
-      [['drink', `${v.d} drinks`], ['water', `${v.w} water`]].forEach(([c, txt]) => { const ln = document.createElement('div'); const key = document.createElement('span'); key.className = 'key'; key.style.background = `var(--${c})`; ln.appendChild(key); ln.appendChild(document.createTextNode(txt)); tip.appendChild(ln); });
-      tip.style.left = Math.min(Math.max(+el.dataset.tipX, 70), W - 70) + 'px';
-      tip.style.top = el.dataset.tipY + 'px';
-      tip.hidden = false;
-    };
-    $$('[data-tip-x]', box).forEach(el => {
-      el.addEventListener('pointerenter', () => show(el));
-      el.addEventListener('pointerleave', () => { tip.hidden = true; });
-      el.addEventListener('focus', () => show(el));
-      el.addEventListener('blur', () => { tip.hidden = true; });
-    });
+    chartTips(box, data, v => [`${dayName(v.k)} · ${dateLabel(v.k, { month: 'short', day: 'numeric' })}`, ['drink', `${v.d} drinks`], ['water', `${v.w} water`]], W);
   }
   function tripText() {
-    const ppl = people(), days = tripDays(), cur = curKey();
+    const days = tripDays(), cur = curKey(), who = shownIn(tripEntries());
     const lines = [`Sip Log · ${S.days}-day cruise`];
     days.forEach((k, i) => {
       if (k > cur) return;
       const items = forDay(k);
-      const parts = ppl.map((n, p) => { const s = stats(byPerson(items, p)); return `${ppl.length > 1 ? n + ' ' : ''}${s.drinks} drinks, ${s.waters} water`; });
+      const parts = who.map(p => { const s = stats(byPerson(items, p)); return `${who.length > 1 ? nameOf(p) + ' ' : ''}${s.drinks} drinks, ${s.waters} water`; });
       lines.push(`Day ${i + 1} (${dateLabel(k, { month: 'short', day: 'numeric' })}${portOf(k) ? ', ' + portOf(k) : ''}): ${parts.join(' · ')}`);
     });
-    ppl.forEach((n, p) => { const s = stats(byPerson(E.filter(e => inTrip(dayKey(e.t))), p)); lines.push('', `${n} total: ${s.drinks} drinks (≈${fmt1(s.std)} std), ${s.waters} water (${volume(s.ml)})`); });
+    who.forEach(p => { const s = stats(byPerson(tripEntries(), p)); lines.push('', `${labelOf(p)} total: ${s.drinks} drinks (≈${fmt1(s.std)} std), ${s.waters} water (${volume(s.ml)})`); });
     return lines.join('\n');
   }
   function backupNudge() {
@@ -675,15 +795,173 @@
     return `<p class="nudge">Your log lives only on this phone. ${days === null ? 'Copy a backup code now and then' : `Last backup was ${days} days ago`} (Settings, Backup) so nothing is lost if the browser is cleared.</p>`;
   }
 
+  // ---------- STATS: awards and fun numbers ----------
+  const minsIntoDay = ts => (ts - dayStart(dayKey(ts))) / 60000;
+  const clockOf = m => fmtTime(dayStart(curKey()) + m * 60000);
+  const LANDMARKS = [['a front door', 2], ['a basketball hoop', 3.05], ['a giraffe', 5.5], ['a 10-meter diving board', 10], ['a five-story building', 16], ['a ten-story building', 30], ['the Statue of Liberty', 46], ['Big Ben', 96]];
+  function computeStats(scope) {
+    const pool = scope === 'today' ? forDay(curKey()) : tripEntries();
+    const who = shownIn(pool);
+    const per = who.map(p => {
+      const mine = byPerson(pool, p);
+      const drinks = mine.filter(e => e.kind === 'drink'), done = drinks.filter(e => !e.open), waters = mine.filter(e => e.kind === 'water');
+      const timed = done.filter(e => e.start && e.t - e.start >= 2 * 60000);
+      const nameCount = {}, spotCount = {};
+      drinks.forEach(e => { if (e.name) { const n = e.name.trim(); nameCount[n] = (nameCount[n] || 0) + 1; } if (e.where) spotCount[e.where] = (spotCount[e.where] || 0) + 1; });
+      const topName = Object.entries(nameCount).sort((a, b) => b[1] - a[1])[0];
+      const topSpot = Object.entries(spotCount).sort((a, b) => b[1] - a[1])[0];
+      const latest = done.reduce((m, e) => !m || minsIntoDay(e.t) > minsIntoDay(m.t) ? e : m, null);
+      const firstByDay = {};
+      done.forEach(e => { const k = dayKey(e.t); if (!firstByDay[k] || e.t < firstByDay[k].t) firstByDay[k] = e; });
+      const earliest = Object.values(firstByDay).reduce((m, e) => !m || minsIntoDay(e.t) < minsIntoDay(m.t) ? e : m, null);
+      let goalDays = 0, streak = 0, best = 0;
+      const goal = +S.waterGoal || 0;
+      const dayList = scope === 'today' ? [curKey()] : tripDays().filter(k => k <= curKey());
+      dayList.forEach(k => {
+        const n = waters.filter(e => dayKey(e.t) === k).length;
+        if (goal && n >= goal) { goalDays++; streak++; best = Math.max(best, streak); } else streak = 0;
+      });
+      return {
+        p, drinks: drinks.length, waters: waters.length, std: drinks.reduce((a, e) => a + (+e.std || 0), 0), ml: waters.reduce((a, e) => a + (+e.ml || 0), 0),
+        ratio: drinks.length ? waters.length / drinks.length : null,
+        sip: timed.length >= 2 ? timed.reduce((a, e) => a + (e.t - e.start), 0) / timed.length / 60000 : null,
+        unique: Object.keys(nameCount).length, topName, topSpot, latest, earliest, goalDays, bestStreak: best, days: dayList.length
+      };
+    });
+    const awards = [];
+    const pick = (list, val, better) => {
+      const ok = list.filter(x => val(x) != null);
+      if (!ok.length) return null;
+      const bestV = ok.reduce((b, x) => b == null || better(val(x), b) ? val(x) : b, null);
+      return { winners: ok.filter(x => val(x) === bestV), v: bestV };
+    };
+    const names = ws => joinNames(ws.map(w => labelOf(w.p)));
+    const minDrinks = scope === 'today' ? 1 : 2;
+    let r = pick(per.filter(x => x.drinks >= minDrinks && x.waters), x => Math.round(x.ratio * 10) / 10, (a, b) => a > b);
+    if (r) awards.push(['💧', 'Hydration Hero', names(r.winners), `${fmt1(r.v)} ${r.v === 1 ? 'water' : 'waters'} per drink`]);
+    // Night Owl needs a drink finished after 9 PM, Early Bird one before noon
+    const cut = (+S.cutoff || 0) * 60, nightMin = 21 * 60 - cut, noonMin = 12 * 60 - cut;
+    r = pick(per, x => x.latest && minsIntoDay(x.latest.t) >= nightMin ? Math.round(minsIntoDay(x.latest.t)) : null, (a, b) => a > b);
+    if (r) awards.push(['🦉', 'Night Owl', names(r.winners), `Last drink finished at ${fmtTime(r.winners[0].latest.t)}${scope === 'trip' ? ' on ' + dayName(dayKey(r.winners[0].latest.t)) : ''}`]);
+    r = pick(per, x => x.earliest && minsIntoDay(x.earliest.t) < noonMin ? Math.round(minsIntoDay(x.earliest.t)) : null, (a, b) => a < b);
+    if (r) awards.push(['🌅', 'Early Bird', names(r.winners), `First drink at ${fmtTime(r.winners[0].earliest.t)}${scope === 'trip' ? ' on ' + dayName(dayKey(r.winners[0].earliest.t)) : ''}`]);
+    const sippers = per.filter(x => x.sip != null);
+    if (sippers.length) {
+      r = pick(sippers, x => Math.round(x.sip), (a, b) => a > b);
+      awards.push(['🐢', 'Slow Sipper', names(r.winners), `${fmtDur(r.v)} per timed drink`]);
+    }
+    r = pick(per.filter(x => x.unique >= 2), x => x.unique, (a, b) => a > b);
+    if (r) awards.push(['🧭', 'Explorer', names(r.winners), `${r.v} different drinks tried`]);
+    r = pick(per.filter(x => x.topName && x.topName[1] >= 2), x => x.topName[1], (a, b) => a > b);
+    if (r) awards.push(['⚓', 'Creature of Habit', names(r.winners), new Set(r.winners.map(w => norm(w.topName[0]))).size === 1 ? `${r.winners[0].topName[0]} ×${r.v}` : `the same drink ${r.v} times each`]);
+    r = pick(per.filter(x => x.topSpot && x.topSpot[1] >= 2), x => x.topSpot[1], (a, b) => a > b);
+    if (r) { const ws = r.winners.filter(w => w.topSpot[0] === r.winners[0].topSpot[0]); awards.push(['🏝️', `${ws[0].topSpot[0]} Regular`, names(ws), `${r.v} drinks there`]); }
+    if (+S.waterGoal) {
+      r = pick(per.filter(x => x.goalDays > 0), x => x.goalDays, (a, b) => a > b);
+      if (r) awards.push(['🎯', 'Goal Getter', names(r.winners), scope === 'today' ? `Hit the ${S.waterGoal}-water goal` : `Hit the water goal ${r.v} of ${r.winners[0].days} days${r.winners[0].bestStreak > 1 ? `, ${r.winners[0].bestStreak} in a row` : ''}`]);
+    }
+    // group tally
+    const drinks = pool.filter(e => e.kind === 'drink').sort((a, b) => a.t - b.t);
+    let rounds = 0;
+    for (let i = 0; i < drinks.length;) {
+      let j = i + 1; const ps = new Set([drinks[i].p || 0]);
+      while (j < drinks.length && drinks[j].t - drinks[i].t <= 10 * 60000) { ps.add(drinks[j].p || 0); j++; }
+      if (ps.size >= 2) rounds++;
+      i = j;
+    }
+    const hours = Array(24).fill(0);
+    drinks.forEach(e => { hours[((Math.floor(minsIntoDay(e.t) / 60) % 24) + 24) % 24]++; });
+    const peakH = hours.indexOf(Math.max(...hours));
+    const groupNames = {};
+    drinks.forEach(e => { if (e.name) groupNames[e.name] = (groupNames[e.name] || 0) + 1; });
+    const fav = Object.entries(groupNames).sort((a, b) => b[1] - a[1])[0];
+    let busiest = null;
+    if (scope === 'trip') tripDays().forEach(k => { const n = drinks.filter(e => dayKey(e.t) === k).length; if (n && (!busiest || n > busiest[1])) busiest = [k, n]; });
+    const timed = drinks.filter(e => !e.open && e.start && e.t - e.start >= 2 * 60000);
+    const totalMl = pool.filter(e => e.kind === 'water').reduce((a, e) => a + (+e.ml || 0), 0);
+    const height = totalMl / 500 * 0.22;
+    const landmark = LANDMARKS.filter(l => height >= l[1]).pop();
+    let seaPort = null;
+    if (scope === 'trip') {
+      const sea = [], port = [];
+      tripDays().filter(k => k <= curKey()).forEach(k => { const name = portOf(k); if (!name) return; const n = drinks.filter(e => dayKey(e.t) === k).length; (/\bsea\b/i.test(name) ? sea : port).push(n); });
+      if (sea.length && port.length) seaPort = [sea.reduce((a, b) => a + b, 0) / sea.length, port.reduce((a, b) => a + b, 0) / port.length];
+    }
+    return { per, awards, drinks: drinks.length, std: drinks.reduce((a, e) => a + (+e.std || 0), 0), waters: pool.filter(e => e.kind === 'water').length, totalMl, rounds, hours, peakH, fav, busiest, timedAvg: timed.length ? timed.reduce((a, e) => a + (e.t - e.start), 0) / timed.length / 60000 : null, height, landmark, seaPort };
+  }
+  function renderStats() {
+    const c = computeStats(statsScope);
+    const multi = c.per.length > 1;
+    const facts = [];
+    if (c.drinks) facts.push(['Drinks', `${c.drinks}`, `≈${fmt1(c.std)} standard drinks`]);
+    if (c.waters) facts.push(['Water', `${c.waters}`, volume(c.totalMl)]);
+    if (multi) facts.push(['Rounds together', `${c.rounds}`, 'drinks within 10 minutes of each other']);
+    if (c.drinks) facts.push(['Busiest hour', `${hourLabel(c.peakH + (+S.cutoff || 0))}`, `${c.hours[c.peakH]} drinks between ${hourLabel(c.peakH + (+S.cutoff || 0))} and ${hourLabel(c.peakH + (+S.cutoff || 0) + 1)}`]);
+    if (c.busiest) facts.push(['Busiest day', dayName(c.busiest[0]), `${c.busiest[1]} drinks${portOf(c.busiest[0]) ? ' · ' + portOf(c.busiest[0]) : ''}`]);
+    if (c.fav) facts.push([multi ? 'Group favorite' : 'Your favorite', c.fav[0], `ordered ${c.fav[1]} time${c.fav[1] > 1 ? 's' : ''}`]);
+    if (c.timedAvg != null) facts.push(['Average sip time', fmtDur(c.timedAvg), 'from order to empty glass']);
+    if (c.seaPort) facts.push(['Sea days vs. port days', `${fmt1(c.seaPort[0])} vs ${fmt1(c.seaPort[1])}`, 'average drinks per day']);
+    $('#v-stats').innerHTML = `
+      <div class="section-head"><h2 style="font-family:var(--font-display);font-weight:400;font-size:26px">Fun stats</h2></div>
+      <div class="seg" role="group" aria-label="Period"><button type="button" data-act="scope" data-v="trip" aria-pressed="${statsScope === 'trip'}">Whole cruise</button><button type="button" data-act="scope" data-v="today" aria-pressed="${statsScope === 'today'}">Today</button></div>
+      ${c.awards.length ? `<section aria-label="Awards"><div class="section-head" style="margin-bottom:10px"><h2>Awards</h2><span class="muted small">${multi ? 'Ties share the prize' : 'Personal bests'}</span></div><div class="awards">${c.awards.map(([em, title, winner, val]) => `<div class="award"><span class="medal" aria-hidden="true">${em}</span><div><p class="aw-t">${esc(title)}</p><p class="aw-w">${esc(winner)}</p><p class="aw-v">${esc(val)}</p></div></div>`).join('')}</div></section>` : `<div class="empty card"><p>Awards show up once a few drinks and waters are logged.</p><p class="small">Name drinks, time a few with "Just ordered", and tag where you are to unlock more of them.</p></div>`}
+      ${facts.length ? `<section class="card" aria-label="Ship's tally"><h2 style="font-size:18px">Ship's tally</h2><div class="facts">${facts.map(([k, v, d]) => `<div class="fact"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span><span class="d">${esc(d)}</span></div>`).join('')}</div>
+        ${c.landmark ? `<p class="funfact">Stacked up, ${multi ? 'everyone\'s' : 'your'} water would make a tower of ${Math.round(c.totalMl / 500)} bottles about ${fmt1(c.height)} m (${Math.round(c.height * 3.281)} ft) tall, taller than ${esc(c.landmark[0])}.</p>` : ''}</section>` : ''}
+      ${c.drinks ? `<section class="card" aria-label="When the drinks happen"><div class="section-head"><h2>When the drinks happen</h2><span class="muted small">Drinks by hour</span></div><div class="chartbox" id="hourchart"></div>
+        <details><summary class="small">See the numbers</summary><div class="tablewrap"><table class="sumtable"><thead><tr><th>Hour</th><th>Drinks</th></tr></thead><tbody>${c.hours.map((n, i) => n ? `<tr><td>${hourLabel(i + (+S.cutoff || 0))}–${hourLabel(i + (+S.cutoff || 0) + 1)}</td><td>${n}</td></tr>` : '').join('')}</tbody></table></div></details></section>` : ''}
+      ${c.per.length ? `<section class="card" aria-label="Leaderboard"><h2 style="font-size:18px">${multi ? 'Side by side' : 'Your numbers'}</h2>
+        <div class="tablewrap"><table class="sumtable"><thead><tr><th>Who</th><th>Drinks</th><th>≈ Std</th><th>Water</th><th>W/D</th></tr></thead><tbody>${c.per.map(x => `<tr><td>${esc(labelOf(x.p))}${x.topName ? `<br><span class="muted small">Signature: ${esc(x.topName[0])}</span>` : ''}</td><td>${x.drinks}</td><td>${fmt1(x.std)}</td><td>${x.waters}</td><td>${x.ratio != null ? fmt1(x.ratio) : '–'}</td></tr>`).join('')}</tbody></table></div>
+        <p class="muted small">W/D is waters per drink. One or more is the goal.</p></section>` : ''}
+      <div class="btn-row"><button class="btn" type="button" data-act="copy-stats">${I.copy}Copy for the group chat</button></div>`;
+    if (c.drinks) drawHours(c.hours);
+  }
+  function drawHours(hours) {
+    const box = $('#hourchart'); if (!box) return;
+    const W = Math.max(260, box.clientWidth || 340), H = 150, left = 26, right = 6, top = 14, bottom = 24;
+    const maxV = Math.max(2, ...hours), step = Math.max(1, niceStep(maxV)), yMax = Math.ceil(maxV / step) * step;
+    const pw = W - left - right, ph = H - top - bottom, band = pw / 24, bw = Math.max(2, Math.min(24, band - 2));
+    const y = v => top + ph - v / yMax * ph, y0 = top + ph;
+    const cut = +S.cutoff || 0;
+    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Drinks by hour of the day">`;
+    for (let v = 0; v <= yMax; v += step) s += `<line class="grid-l" x1="${left}" x2="${W - right}" y1="${y(v)}" y2="${y(v)}"/><text class="axis-t" x="${left - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    const peak = Math.max(...hours);
+    const data = hours.map((n, i) => ({ n, i }));
+    hours.forEach((n, i) => {
+      const x = left + band * i + (band - bw) / 2;
+      s += `<g class="hitg"><rect class="hit" x="${left + band * i}" y="${top}" width="${band}" height="${ph}" tabindex="0" role="img" aria-label="${esc(`${hourLabel(i + cut)}: ${n} drinks`)}" data-tip-x="${x + bw / 2}" data-tip-y="${Math.min(y(n), y0 - 10)}" data-i="${i}"/><path class="mk" d="${barPath(x, y(n), bw, y0 - y(n), y0)}" fill="var(--drink)"/></g>`;
+      if (n && n === peak) s += `<text class="bar-label" x="${x + bw / 2}" y="${y(n) - 5}" text-anchor="middle">${n}</text>`;
+      const clock = (i + cut) % 24;
+      if (clock % 4 === 0) s += `<text class="axis-t" x="${left + band * i}" y="${H - 6}" text-anchor="middle">${clock === 0 ? '12a' : clock === 12 ? '12p' : clock < 12 ? clock + 'a' : (clock - 12) + 'p'}</text>`;
+    });
+    s += `<line x1="${left}" x2="${W - right}" y1="${y0}" y2="${y0}" stroke="var(--muted)" stroke-width="1"/></svg><div class="tip" hidden></div>`;
+    box.innerHTML = s;
+    chartTips(box, data, v => [`${hourLabel(v.i + cut)}–${hourLabel(v.i + cut + 1)}`, ['drink', `${v.n} drink${v.n === 1 ? '' : 's'}`]], W);
+  }
+  function statsText() {
+    const c = computeStats(statsScope);
+    const lines = [`Sip Log ${statsScope === 'today' ? 'awards for ' + dayName(curKey()) : 'cruise awards'} 🏆`];
+    c.awards.forEach(([em, title, winner, val]) => lines.push(`${em} ${title}: ${winner} (${val})`));
+    if (c.per.length > 1 && c.rounds) lines.push(`🥂 Rounds together: ${c.rounds}`);
+    if (c.fav) lines.push(`🍹 Favorite: ${c.fav[0]} ×${c.fav[1]}`);
+    if (c.landmark) lines.push(`💧 Water tower: ${Math.round(c.totalMl / 500)} bottles, taller than ${c.landmark[0]}`);
+    return lines.join('\n');
+  }
+
   // ---------- SETTINGS ----------
+  function portsHTML() {
+    const out = [];
+    for (let i = 0; i < (+S.days || 0); i++) out.push(`<label for="port-${i}">Day ${i + 1} · ${esc(dateLabel(keyAt(i), { month: 'short', day: 'numeric' }))}<input id="port-${i}" data-set="port" data-i="${i}" value="${esc(S.ports[i] || '')}" placeholder="${i === 0 ? 'e.g. Barcelona' : 'Port or Sea day'}" maxlength="28"></label>`);
+    return out.join('');
+  }
+  function refreshPorts() { const box = $('#v-settings .ports'); if (!box) return; box.innerHTML = portsHTML(); bindSettings(box); }
   function renderSettings() {
-    const ppl = S.people.concat(['', '', '', '']).slice(0, 4);
     $('#v-settings').innerHTML = `
       <h2 style="font-family:var(--font-display);font-weight:400;font-size:26px">Settings</h2>
       <div class="settings">
-        <section class="card"><h3>Who's logging</h3>
-          <div class="grid2">${ppl.map((p, i) => `<label class="field" for="person-${i}"><span>Person ${i + 1}</span><input id="person-${i}" data-set="person" data-i="${i}" value="${esc(p)}" placeholder="${i === 0 ? 'Me' : i === 1 ? 'Partner' : 'Optional'}" maxlength="16"></label>`).join('')}</div>
-          <p class="muted small">Leave a name blank to hide that person. Each person gets their own counters on one phone, or each of you can install Sip Log on your own phone.</p>
+        <section class="card"><h3>People</h3>
+          <div class="plist">${S.people.map((x, p) => `<div class="prow ${x.hidden ? 'off' : ''}"><span class="pname">${esc(labelOf(p))}${x.hidden ? ' <span class="muted small">(hidden)</span>' : ''}</span><span class="btn-row">${x.hidden ? `<button class="btn small" type="button" data-act="person-show" data-p="${p}">Show again</button>` : `<button class="btn small" type="button" data-act="person-edit" data-p="${p}">${I.pencil}Edit</button>`}</span></div>`).join('')}</div>
+          ${canAdd() ? `<div class="btn-row"><button class="btn small" type="button" data-act="person-new">${I.person}Add a person</button></div>` : ''}
+          <p class="muted small">Track up to ${MAX_PEOPLE} people on one phone. Tap a name on the Log screen to rename someone or give them an emoji. Each of you can also install Sip Log on your own phone and merge logs with a backup code.</p>
         </section>
         <section class="card"><h3>Your cruise</h3>
           <div class="grid2">
@@ -693,6 +971,7 @@
           </div>
           <p class="field" style="font-weight:600;margin-top:4px">Ports and sea days (optional)</p>
           <div class="ports">${portsHTML()}</div>
+          <p class="muted small">Type "Sea day" for days at sea and Fun stats will compare sea days with port days.</p>
         </section>
         <section class="card"><h3>Water</h3>
           <div class="grid2">
@@ -712,7 +991,7 @@
           <div class="seg" role="group" aria-label="Theme">${[['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].map(([k, l]) => `<button type="button" data-act="theme" data-v="${k}" aria-pressed="${S.theme === k}">${l}</button>`).join('')}</div>
         </section>
         <section class="card" id="backup"><h3>Backup and export</h3>
-          <p class="muted small">Everything stays on this phone. A backup code lets you move the log to another phone or merge your partner's log into yours.${S.lastBackup ? ` Last backup: ${new Date(S.lastBackup).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}.` : ''}</p>
+          <p class="muted small">Everything stays on this phone. A backup code moves the log to another phone, or merges a friend's log into yours. People are matched by name.${S.lastBackup ? ` Last backup: ${new Date(S.lastBackup).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}.` : ''}</p>
           <div class="btn-row"><button class="btn small" type="button" data-act="backup">${I.copy}Copy backup code</button><button class="btn small" type="button" data-act="csv">${I.copy}Copy as spreadsheet (CSV)</button></div>
           <label class="field" for="restore"><span>Restore or merge a backup code</span><textarea id="restore" placeholder="Paste a backup code here"></textarea></label>
           <div class="btn-row"><button class="btn small" type="button" data-act="merge">Merge into my log</button><button class="btn small" type="button" data-act="replace">Replace my log</button></div>
@@ -728,18 +1007,11 @@
       <p class="foot">Sip Log keeps a record, not medical advice. Standard drinks are estimates (0.6 oz of alcohol each).</p>`;
     bindSettings();
   }
-  function portsHTML() {
-    const out = [];
-    for (let i = 0; i < (+S.days || 0); i++) out.push(`<label for="port-${i}">Day ${i + 1} · ${esc(dateLabel(keyAt(i), { month: 'short', day: 'numeric' }))}<input id="port-${i}" data-set="port" data-i="${i}" value="${esc(S.ports[i] || '')}" placeholder="${i === 0 ? 'e.g. Barcelona' : 'Port or Sea day'}" maxlength="28"></label>`);
-    return out.join('');
-  }
-  function refreshPorts() { const box = $('#v-settings .ports'); if (!box) return; box.innerHTML = portsHTML(); bindSettings(box); }
   function bindSettings(root) {
     $$('[data-set]', root || $('#v-settings')).forEach(inp => {
       inp.addEventListener('change', () => {
         const t = inp.dataset.set, v = inp.value.trim();
-        if (t === 'person') { const arr = S.people.concat(['', '', '', '']).slice(0, 4); arr[+inp.dataset.i] = v; while (arr.length > 1 && !arr[arr.length - 1]) arr.pop(); S.people = arr; }
-        else if (t === 'start') { if (/^\d{4}-\d{2}-\d{2}$/.test(v)) S.start = v; }
+        if (t === 'start') { if (/^\d{4}-\d{2}-\d{2}$/.test(v)) S.start = v; }
         else if (t === 'days') { const n = Math.round(+v); if (n >= 1 && n <= 60) S.days = n; }
         else if (t === 'cutoff') S.cutoff = +v;
         else if (t === 'port') { S.ports[+inp.dataset.i] = v; }
@@ -755,25 +1027,49 @@
       });
     });
   }
-  function restore(mode, btn) {
+  function restore(mode) {
     const box = $('#restore');
     try {
       const d = JSON.parse(box.value);
       if (d.app !== 'siplog' || !Array.isArray(d.entries)) throw new Error('not a backup');
-      if (mode === 'replace') { E = d.entries; if (d.settings) Object.assign(S, d.settings); }
-      else { const ids = new Set(E.map(e => e.id)); d.entries.forEach(e => { if (!ids.has(e.id)) E.push(e); }); }
-      saveE(); saveS(); applyTheme(); box.value = '';
-      toast(mode === 'replace' ? 'Log replaced from backup' : `Merged ${d.entries.length} entries`);
+      if (mode === 'replace') {
+        E = d.entries;
+        if (d.settings) Object.assign(S, d.settings);
+        normalizePeople();
+        saveE(); saveS(); applyTheme(); box.value = '';
+        toast('Log replaced from backup'); renderSettings(); return;
+      }
+      // merge: match people by name, add anyone new, skip entries already here
+      const theirs = ((d.settings && d.settings.people) || []).map(x => typeof x === 'string' ? { name: x } : x);
+      const map = {};
+      let skipped = 0, added = 0;
+      const slotFor = tp => {
+        if (map[tp] != null) return map[tp];
+        const nm = (theirs[tp] && theirs[tp].name) || `Person ${tp + 1}`;
+        let i = S.people.findIndex(x => norm(x.name) === norm(nm));
+        if (i < 0 && S.people.length < MAX_PEOPLE) { S.people.push({ name: nm, emoji: (theirs[tp] && theirs[tp].emoji) || '', hidden: false }); i = S.people.length - 1; }
+        if (i >= 0 && S.people[i].hidden) S.people[i].hidden = false;
+        map[tp] = i;
+        return i;
+      };
+      const ids = new Set(E.map(e => e.id));
+      d.entries.forEach(e => {
+        if (ids.has(e.id)) return;
+        const slot = slotFor(e.p || 0);
+        if (slot < 0) { skipped++; return; }
+        E.push(Object.assign({}, e, { p: slot })); added++;
+      });
+      saveE(); saveS(); box.value = '';
+      toast(`Merged ${added} new entr${added === 1 ? 'y' : 'ies'}${skipped ? `, skipped ${skipped} (people limit reached)` : ''}`);
       renderSettings();
     } catch (e) { toast('That code didn\'t work. Copy the whole backup code and try again.'); }
   }
   function csv() {
-    const ppl = people();
     const q = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
     const rows = [['Date', 'Cruise day', 'Port', 'Person', 'Type', 'Name', 'Ordered', 'Finished', 'Minutes', 'Std drinks', 'Water ml', 'Where', 'Favorite', 'Note']];
     E.slice().sort((a, b) => a.t - b.t).forEach(e => {
       const k = dayKey(e.t);
-      rows.push([k, inTrip(k) ? dayIndex(k) + 1 : '', portOf(k), ppl[e.p || 0] || '', e.kind, e.kind === 'water' ? '' : (e.name || ''), e.start ? fmtTime(e.start) : '', e.open ? '' : fmtTime(e.t), e.start && !e.open ? Math.round((e.t - e.start) / 60000) : '', e.kind === 'water' ? '' : e.std, e.kind === 'water' ? e.ml : '', e.where || '', e.fav ? 'yes' : '', e.note || '']);
+      rows.push([k, inTrip(k) ? dayIndex(k) + 1 : '', portOf(k), nameOf(e.p || 0), e.kind, e.kind === 'water' ? '' : (e.name || ''), e.start ? fmtTime(e.start) : '', e.open ? '' : fmtTime(e.t), e.start && !e.open ? Math.round((e.t - e.start) / 60000) : '', e.kind === 'water' ? '' : e.std, e.kind === 'water' ? e.ml : '', e.where || '', e.fav ? 'yes' : '', e.note || '']);
     });
     return rows.map(r => r.map(q).join(',')).join('\n');
   }
@@ -786,30 +1082,50 @@
     'start-drink': t => startDrink(+t.dataset.p),
     again: t => again(+t.dataset.p, t.dataset.id),
     finish: t => finish(t.dataset.id),
+    round: t => openRound(t.dataset.kind),
     edit: t => openEditor(t.dataset.id),
     'add-past': t => openEditor(null, { p: +t.dataset.p, day: sel }),
+    'person-edit': t => openPerson(+t.dataset.p),
+    'person-new': () => openPerson(null),
+    'person-show': t => { const p = +t.dataset.p; S.people[p].hidden = false; saveS(); render(); toast(`${nameOf(p)} is back on the counters`); },
     close: () => closeTop(),
     prevday: () => { const { y, m, d } = parse(sel); sel = ymd(new Date(y, m - 1, d - 1, 12)); renderLog(); },
     nextday: () => { const { y, m, d } = parse(sel); const n = ymd(new Date(y, m - 1, d + 1, 12)); if (n <= curKey()) { sel = n; renderLog(); } },
     today: () => { sel = curKey(); renderLog(); },
     days: () => openDays(),
     pickday: t => { sel = t.dataset.k; if (stack.length) closeTop(); go('log'); },
+    tlwho: t => { tlWho = +t.dataset.v; renderLog(); },
     'setup-save': () => {
-      const st = $('#su-start').value, dd = Math.round(+$('#su-days').value), p0 = $('#su-p0').value.trim(), p1 = $('#su-p1').value.trim();
+      const st = $('#su-start').value, dd = Math.round(+$('#su-days').value);
       if (/^\d{4}-\d{2}-\d{2}$/.test(st)) S.start = st;
       if (dd >= 1 && dd <= 60) S.days = dd;
-      S.people = p1 ? [p0 || 'Me', p1] : [p0 || 'Me'];
+      const names = [0, 1, 2, 3].map(i => { const el = $('#su-p' + i); return el ? el.value.trim() : ''; });
+      // blank fields drop that person; anyone who already logged something is hidden instead, so entries keep their owner
+      const used = new Set(E.map(e => e.p || 0)), next = [], remap = {};
+      for (let i = 0; i < Math.max(4, S.people.length); i++) {
+        const old = S.people[i] || { name: '', emoji: '', hidden: false };
+        let person = null;
+        if (i >= 4) person = old;
+        else if (names[i] || i === 0) person = { name: names[i] || old.name || 'Me', emoji: old.emoji || '', hidden: false };
+        else if (used.has(i)) person = Object.assign({}, old, { name: old.name || `Person ${i + 1}`, hidden: true });
+        if (person) { remap[i] = next.length; next.push(person); }
+      }
+      E.forEach(e => { const r = remap[e.p || 0]; if (r != null) e.p = r; });
+      S.people = next;
+      normalizePeople(); saveE();
       S.setupDone = true; saveS(); sel = curKey(); renderLog();
       toast(inTrip(curKey()) ? `Today is Day ${dayIndex(curKey()) + 1}. Happy sailing!` : 'Saved. Today is outside your cruise dates.');
     },
     'copy-day': () => copyText(dayText(sel), 'Day summary copied'),
     'copy-trip': () => copyText(tripText(), 'Trip summary copied'),
+    'copy-stats': () => copyText(statsText(), 'Awards copied. Paste them into your group chat.'),
+    scope: t => { statsScope = t.dataset.v; renderStats(); },
     tripwho: t => { tripWho = +t.dataset.v; renderTrip(); },
     theme: t => { S.theme = t.dataset.v; saveS(); applyTheme(); $$('[data-act="theme"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.theme)); },
-    backup: () => { S.lastBackup = Date.now(); saveS(); copyText(JSON.stringify({ app: 'siplog', v: 1, settings: S, entries: E }), 'Backup code copied. Paste it somewhere safe, like Notes.'); },
+    backup: () => { S.lastBackup = Date.now(); saveS(); copyText(JSON.stringify({ app: 'siplog', v: 2, settings: S, entries: E }), 'Backup code copied. Paste it somewhere safe, like Notes.'); },
     csv: () => copyText(csv(), 'Spreadsheet text copied. Paste it into Numbers, Excel or Sheets.'),
-    merge: t => restore('merge', t),
-    replace: t => restore('replace', t),
+    merge: () => restore('merge'),
+    replace: () => restore('replace'),
     wipe: t => {
       if (Date.now() - wipeArmed > 4000) { wipeArmed = Date.now(); t.textContent = 'Tap again to clear every entry'; return; }
       E = []; saveE(); t.textContent = 'Cleared'; toast('All entries cleared');
@@ -819,7 +1135,7 @@
   };
   document.addEventListener('click', e => {
     const g = e.target.closest('[data-go]');
-    if (g) { while (stack.length) closeTop(); if (g.dataset.go === 'log') sel = view === 'log' ? curKey() : sel; go(g.dataset.go); return; }
+    if (g) { while (stack.length) closeTop(); if (g.dataset.go === 'log' && view === 'log') sel = curKey(); go(g.dataset.go); return; }
     const t = e.target.closest('[data-act]');
     if (!t) return;
     const fn = ACT[t.dataset.act];
@@ -837,9 +1153,23 @@
     const c = curKey();
     if (c !== lastCur) { if (sel === lastCur) sel = c; lastCur = c; if (!stack.length && view === 'log') renderLog(); }
   }, 30000);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !stack.length) { const c = curKey(); if (c !== lastCur) { if (sel === lastCur) sel = c; lastCur = c; } render(); } });
-  let rz;
-  window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (!stack.length && view !== 'settings') render(); }, 200); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || stack.length) return;
+    const c = curKey(); if (c !== lastCur) { if (sel === lastCur) sel = c; lastCur = c; }
+    if (view !== 'settings' && !(view === 'log' && !S.setupDone)) render();
+  });
+  // charts follow the screen width; only they are redrawn so nothing being typed is lost
+  let rz, lastW = window.innerWidth;
+  window.addEventListener('resize', () => {
+    clearTimeout(rz);
+    rz = setTimeout(() => {
+      if (window.innerWidth === lastW) return;
+      lastW = window.innerWidth;
+      if (view === 'log') drawGlance(sel, forDay(sel));
+      else if (view === 'trip') drawTripChart(tripDays(), tripFilt, curKey());
+      else if (view === 'stats') { const c = computeStats(statsScope); if (c.drinks) drawHours(c.hours); }
+    }, 200);
+  });
 
   // ---------- offline status ----------
   function setStatus(state) {
@@ -865,9 +1195,8 @@
   }
 
   // ---------- boot ----------
+  saveS();
   applyTheme();
-  const setHead = () => { const h = $('.top'); if (h) document.documentElement.style.setProperty('--head-h', h.offsetHeight + 'px'); };
   go('log');
-  setHead();
   initOffline();
 })();

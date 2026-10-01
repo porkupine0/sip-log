@@ -1,5 +1,5 @@
 // Sip Log offline cache. Serves the app from cache, refreshes it in the background when online.
-const CACHE = 'siplog-b13072ff99';
+const CACHE = 'siplog-40d3bcc62c';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
