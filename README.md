@@ -16,6 +16,10 @@ An offline drink and water counter for a cruise. One tap logs a drink or a water
 
 The log is saved on the phone. Settings → Backup and export copies a backup code (to move or merge logs between phones; people are matched by name) or a spreadsheet (CSV).
 
+## Cabin Rain
+
+`rain/` holds Cabin Rain, a separate app that plays endless rain for sleeping, made on the phone with no loop point. Open it at https://porkupine0.github.io/sip-log/rain/ and add it to the Home Screen the same way. See `rain/README.md`.
+
 ## Editing
 
 Source is in `source/`. Rebuild with:

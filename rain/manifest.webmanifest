@@ -1,0 +1,31 @@
+{
+  "name": "Cabin Rain",
+  "short_name": "Cabin Rain",
+  "description": "Endless rain for sleeping, made on your phone. No loop, no seam, works offline and with the screen locked.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#08121b",
+  "theme_color": "#08121b",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
