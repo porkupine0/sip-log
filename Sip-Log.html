@@ -123,8 +123,10 @@ p { margin: 0; }
 .field > span:first-child { font-weight: 600; }
 .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px; min-height: 44px; font-size: 16px; }
 .field textarea { min-height: 70px; resize: vertical; }
-.inline { display: flex; gap: 8px; align-items: center; }
-.inline > input { flex: 1; min-width: 0; }
+.inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.inline > input { flex: 1 1 230px; width: 0; min-width: 0; }
+#ed-body, #pe-body, #rd-body { grid-template-columns: minmax(0, 1fr); }
+.chip.frac { font-size: 17px; min-width: 48px; justify-content: center; }
 
 /* day header */
 .dayhead { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
@@ -188,6 +190,16 @@ p { margin: 0; }
 .sipping p { font-size: 14px; }
 .sipping b { font-weight: 700; }
 .sipping .btn { background: var(--surface); border-color: var(--drink); min-height: 40px; }
+.sipping.w { background: var(--water-soft); }
+.sipping.w .btn { border-color: var(--water); }
+.sipping .fin { width: 100%; }
+.partrow { display: grid; gap: 4px; }
+.partrow .cap { font-size: 12px; color: var(--ink-2); }
+.g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.g3 button { min-height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 16px; font-weight: 700; padding: 0; }
+.sipping .g3 button { border-color: var(--drink-soft); }
+.mini[data-act="start-drink"] svg { color: var(--drink); }
+.mini.w svg { color: var(--water); }
 .nudge { font-size: 13px; border-radius: 10px; padding: 8px 10px; background: var(--water-soft); color: var(--ink); }
 
 /* glance strip */
@@ -207,6 +219,9 @@ p { margin: 0; }
 .m-drink { fill: var(--drink); stroke: var(--surface); stroke-width: 2; }
 .m-water { fill: var(--water); stroke: var(--surface); stroke-width: 2; }
 .m-open { fill: var(--surface); stroke: var(--drink); stroke-width: 2; }
+.m-wopen { fill: var(--surface); stroke: var(--water); stroke-width: 2; }
+.m-dfill { fill: var(--drink); }
+.m-wfill { fill: var(--water); }
 .hit { fill: transparent; cursor: pointer; }
 .hit:focus { outline: none; }
 .hit:focus + .mk, .hitg:hover .mk, .hitg:focus-within .mk { filter: brightness(1.12); }
@@ -233,6 +248,7 @@ p { margin: 0; }
 .tl-gap { font-size: 12px; color: var(--muted); padding: 3px 0 3px 72px; border-bottom: 1px solid var(--line); }
 .who-chip { font-family: var(--font-label); font-weight: 600; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); background: var(--surface-2); border-radius: 6px; padding: 1px 6px; margin-right: 6px; }
 .badge-sip { font-size: 11px; font-weight: 700; color: var(--drink); border: 1px solid currentColor; border-radius: 6px; padding: 0 5px; margin-left: 6px; }
+.badge-part { font-size: 12px; font-weight: 700; color: var(--ink-2); background: var(--surface-2); border-radius: 6px; padding: 0 6px; margin-left: 6px; }
 .empty { padding: 22px 8px; text-align: center; color: var(--muted); display: grid; gap: 6px; justify-items: center; }
 .sumtable { width: 100%; border-collapse: collapse; font-size: 14px; }
 .sumtable th, .sumtable td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -289,6 +305,21 @@ details[open] > summary { margin-bottom: 6px; }
 @keyframes rise { from { transform: translateY(24px); opacity: .4; } to { transform: none; opacity: 1; } }
 .panel-bar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 0 8px; background: var(--bg); }
 .panel-bar h2 { font-size: 18px; }
+.seg.wide { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+.pk-search { position: sticky; top: 56px; z-index: 1; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 0 12px; min-height: 48px; box-shadow: 0 0 0 6px var(--bg); }
+.pk-search:focus-within { outline: 3px solid var(--water); outline-offset: 1px; }
+.pk-search svg { width: 18px; height: 18px; color: var(--muted); flex: none; }
+.pk-search input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; padding: 10px 0; outline: none; -webkit-appearance: none; appearance: none; }
+.pk-list { display: grid; }
+.pk-h { font-family: var(--font-label); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); padding: 14px 0 4px; }
+.pick { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 10px 4px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; }
+.pick:active { background: var(--surface-2); }
+.pick .pk-n { font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.pick .pk-m { font-size: 13px; color: var(--muted); white-space: nowrap; flex: none; }
+.pick svg { width: 18px; height: 18px; color: var(--drink); flex: none; }
+.pick.plain .pk-n { color: var(--ink-2); font-weight: 500; }
+.pick.add .pk-n { color: var(--drink); }
+.heart { color: var(--drink); }
 .sugg { display: grid; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
 .sugg button { border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; padding: 10px 12px; display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
 .sugg button:last-child { border-bottom: 0; }
@@ -855,7 +886,7 @@ Aguardiente|0.5
   const S = Object.assign({
     people: [{ name: 'Me' }, { name: 'Partner' }], start: '', days: 10, ports: [], cutoff: 4,
     waterUnit: 'bottle', waterGoal: 5, limit: '', pkg: '', price: 16,
-    theme: 'auto', setupDone: false, lastBackup: 0
+    theme: 'auto', setupDone: false, lastBackup: 0, askDrink: true
   }, store.get('settings', {}));
   let E = store.get('entries', []);
   if (!Array.isArray(E)) E = [];
@@ -911,6 +942,19 @@ Aguardiente|0.5
   const fmtHour = h => { h = +h || 0; return h === 0 ? 'midnight' : h < 12 ? h + ' AM' : h === 12 ? 'noon' : (h - 12) + ' PM'; };
   const joinNames = arr => arr.length < 2 ? arr.join('') : arr.slice(0, -1).join(', ') + ' & ' + arr[arr.length - 1];
   const buzz = () => { try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* ignore */ } };
+  // portions: how much of a drink or a water was actually finished
+  const PARTS = [[1, 'All'], [0.75, '¾'], [0.5, '½'], [0.25, '¼']];
+  const FRAC = { 0.25: '¼', 0.5: '½', 0.75: '¾' };
+  const partOf = e => (e && e.part > 0 && e.part < 1 ? e.part : 1);
+  const partWord = v => (v >= 1 ? 'all' : FRAC[v] || fmt1(v));
+  function fmtQ(n) { // quarter amounts as 2½
+    const r = Math.round(n * 4) / 4;
+    if (Math.abs(r - n) > 0.01) return fmt1(n);
+    const whole = Math.floor(r + 1e-9), f = +(r - whole).toFixed(2);
+    return f ? (whole ? String(whole) : '') + FRAC[f] : String(whole);
+  }
+  const many = (n, one, more) => (n > 0 && n <= 1 ? one : more);
+  const POPULAR = ['Coconut Patrón Margarita', 'Piña Colada', 'Classic Margarita', 'Mojito', 'Aperol Spritz', 'Espresso Martini', 'Painkiller', 'Caribbean Rum Punch', 'Beer', 'Glass of wine'];
 
   // ---------- icons ----------
   const I = {
@@ -926,6 +970,8 @@ Aguardiente|0.5
     water: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8c3.4 4.3 6.5 8 6.5 11.4a6.5 6.5 0 0 1-13 0C5.5 10.8 8.6 7.1 12 2.8z"/></svg>',
     cheers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h7l-.6 5.5a2.9 2.9 0 0 1-5.8 0zM6.5 12.4V19M4 19.5h5M14 4h7l-.6 5.5a2.9 2.9 0 0 1-5.8 0zM17.5 12.4V19M15 19.5h5"/></svg>',
     person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 19.5c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M19 8v6M16 11h6"/></svg>',
+    sipw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5c2.4 3 4.3 5.6 4.3 7.9a4.3 4.3 0 0 1-8.6 0c0-2.3 1.9-4.9 4.3-7.9z"/><circle cx="17" cy="16" r="4.5"/><path d="M17 13.8V16l1.4.9"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg>',
     pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>'
   };
 
@@ -941,16 +987,21 @@ Aguardiente|0.5
   const forDay = k => E.filter(e => dayKey(e.t) === k);
   const tripEntries = () => E.filter(e => inTrip(dayKey(e.t)));
   const byPerson = (list, p) => list.filter(e => (e.p || 0) === p);
+  // drinks and waters are amounts (a half-finished drink counts ½); orders and bottles count glasses
   function stats(list) {
     const drinks = list.filter(e => e.kind === 'drink');
     const waters = list.filter(e => e.kind === 'water');
     const done = drinks.filter(e => !e.open).sort((a, b) => a.t - b.t);
     const first = done[0], last = done[done.length - 1];
+    const sum = (arr, f) => arr.reduce((a, e) => a + f(e), 0);
     return {
-      drinks: drinks.length, waters: waters.length,
-      std: drinks.reduce((a, e) => a + (+e.std || 0), 0),
-      ml: waters.reduce((a, e) => a + (+e.ml || 0), 0),
-      first, last, open: drinks.filter(e => e.open).sort((a, b) => a.t - b.t),
+      drinks: sum(drinks, partOf), orders: drinks.length,
+      waters: sum(waters, partOf), bottles: waters.length,
+      std: sum(drinks, e => (+e.std || 0) * partOf(e)),
+      ml: sum(waters, e => (+e.ml || 0) * partOf(e)),
+      first, last,
+      open: drinks.filter(e => e.open).sort((a, b) => a.t - b.t),
+      openW: waters.filter(e => e.open).sort((a, b) => a.t - b.t),
       pace: done.length >= 2 && last.t - first.t >= 5 * 60000 ? (last.t - first.t) / (done.length - 1) / 60000 : null
     };
   }
@@ -965,6 +1016,21 @@ Aguardiente|0.5
     return [...seen.values()];
   }
   const stdFor = name => { const c = name && catalogByName.get(norm(name)); return c ? c.std : null; };
+  // every drink name logged so far: this person's own first (favorites, then most recent), then everyone else's
+  function drinkHistory(p) {
+    const map = new Map();
+    E.filter(e => e.kind === 'drink' && e.name).sort((a, b) => b.t - a.t).forEach(e => {
+      const n = norm(e.name);
+      let h = map.get(n);
+      if (!h) { h = { name: e.name.trim(), last: e, mine: null, count: 0, fav: false }; map.set(n, h); }
+      if ((e.p || 0) === p) { h.count++; if (!h.mine) h.mine = e; }
+      if (e.fav) h.fav = true;
+    });
+    const list = [...map.values()];
+    const own = list.filter(h => h.mine).sort((a, b) => (b.fav - a.fav) || b.mine.t - a.mine.t);
+    const others = list.filter(h => !h.mine).sort((a, b) => (b.fav - a.fav) || b.last.t - a.last.t);
+    return own.concat(others);
+  }
 
   // ---------- overlays, toasts, clipboard ----------
   const layer = $('#layer');
@@ -1087,10 +1153,19 @@ Aguardiente|0.5
     </div>`;
   }
 
+  // something still being sipped: one tap if it's all gone, or say how much was finished
+  function sipBox(e) {
+    const isW = e.kind === 'water';
+    return `<div class="sipping ${isW ? 'w' : ''}">
+      <p>Sipping <b>${esc(isW ? 'water' : (e.name || 'a drink'))}</b> · <span data-dur="${e.start || e.t}">${fmtDur((Date.now() - (e.start || e.t)) / 60000)}</span></p>
+      <button class="btn small fin" type="button" data-act="finish" data-id="${e.id}" data-part="1">${I.check}Finished</button>
+      <div class="partrow" role="group" aria-label="Only finished part of it"><span class="cap">Only part of it?</span><div class="g3">${PARTS.slice(1).map(([v, l]) => `<button type="button" data-act="finish" data-id="${e.id}" data-part="${v}" aria-label="Finished ${l} of it">${l}</button>`).join('')}</div></div>
+    </div>`;
+  }
   function tileHTML(p, list, isToday, k, compact) {
     const st = stats(list);
     const goal = +S.waterGoal || 0, lim = +S.limit || 0;
-    const open = st.open[st.open.length - 1];
+    const open = st.open[st.open.length - 1], openW = st.openW[st.openW.length - 1];
     const ln = isToday ? lastNamed(p) : null;
     const nameBtn = `<button class="namebtn" type="button" data-act="person-edit" data-p="${p}" aria-label="Rename ${esc(nameOf(p))}"><span class="nm">${esc(labelOf(p))}</span><span class="pen" aria-hidden="true">${I.pencil}</span></button>`;
     const actions = isToday
@@ -1099,21 +1174,23 @@ Aguardiente|0.5
         : `<button class="big drink" type="button" data-act="add-drink" data-p="${p}">${I.plus}Drink</button><button class="big water" type="button" data-act="add-water" data-p="${p}">${I.plus}Water</button>`) +
         `<div class="mini-row">
           <button class="mini" type="button" data-act="start-drink" data-p="${p}">${I.timer}<span>${compact ? 'Ordered' : 'Just ordered'}</span></button>
+          <button class="mini w" type="button" data-act="start-water" data-p="${p}" title="Start a water you'll sip for a while">${I.sipw}<span>Start water</span></button>
           ${ln ? `<button class="mini" type="button" data-act="again" data-p="${p}" data-id="${ln.id}" title="Log another ${esc(ln.name)}">${I.again}<span>${esc(ln.name)}</span></button>` : ''}
         </div>`
       : `<button class="btn small" type="button" data-act="add-past" data-p="${p}">Add to ${esc(dayName(k))}</button>`;
     return `<div class="tile ${compact ? 'compact' : ''}">
       <div class="who">${nameBtn}${st.std ? `<span class="muted small">≈${fmt1(st.std)} std</span>` : ''}</div>
       <div class="figs">
-        <div class="fig drink"><span class="v">${st.drinks}${lim ? `<span class="of">/${lim}</span>` : ''}</span><span class="k"><i></i>${st.drinks === 1 ? 'drink' : 'drinks'}</span></div>
-        <div class="fig water"><span class="v">${st.waters}${goal ? `<span class="of">/${goal}</span>` : ''}</span><span class="k"><i></i>water</span></div>
+        <div class="fig drink"><span class="v">${fmtQ(st.drinks)}${lim ? `<span class="of">/${lim}</span>` : ''}</span><span class="k"><i></i>${many(st.drinks, 'drink', 'drinks')}</span></div>
+        <div class="fig water"><span class="v">${fmtQ(st.waters)}${goal ? `<span class="of">/${goal}</span>` : ''}</span><span class="k"><i></i>water</span></div>
       </div>
-      ${lim ? `<div class="meter drinkm ${st.drinks > lim ? 'over' : ''}" role="img" aria-label="${st.drinks} of ${lim} drinks"><i style="width:${Math.min(100, st.drinks / lim * 100)}%"></i></div>` : ''}
-      ${goal ? `<div class="meter" role="img" aria-label="${st.waters} of ${goal} waters"><i style="width:${Math.min(100, st.waters / goal * 100)}%"></i></div>` : ''}
-      ${open ? `<div class="sipping"><p>Sipping <b>${esc(open.name || 'a drink')}</b> · <span data-dur="${open.start || open.t}">${fmtDur((Date.now() - (open.start || open.t)) / 60000)}</span></p><button class="btn small" type="button" data-act="finish" data-id="${open.id}">${I.check}Finished</button></div>` : ''}
+      ${lim ? `<div class="meter drinkm ${st.drinks > lim ? 'over' : ''}" role="img" aria-label="${fmtQ(st.drinks)} of ${lim} drinks"><i style="width:${Math.min(100, st.drinks / lim * 100)}%"></i></div>` : ''}
+      ${goal ? `<div class="meter" role="img" aria-label="${fmtQ(st.waters)} of ${goal} waters"><i style="width:${Math.min(100, st.waters / goal * 100)}%"></i></div>` : ''}
+      ${open ? sipBox(open) : ''}
+      ${openW ? sipBox(openW) : ''}
       ${actions}
       <p class="lastline">${st.last ? `Last drink ${fmtTime(st.last.t)}${isToday ? ` · <span data-ago="${st.last.t}">${ago(st.last.t)}</span>` : ''}` : 'No drinks yet'}${st.pace ? ` · one every ${fmtDur(st.pace)}` : ''}</p>
-      ${isToday && st.drinks - st.waters >= 2 ? `<p class="nudge">${st.drinks - st.waters} drinks ahead of water. Time for a bottle?</p>` : ''}
+      ${isToday && st.drinks - st.waters >= 2 ? `<p class="nudge">${fmtQ(st.drinks - st.waters)} drinks ahead of water. Time for a bottle?</p>` : ''}
     </div>`;
   }
 
@@ -1139,20 +1216,29 @@ Aguardiente|0.5
     });
     const now = Date.now();
     if (now > t0 && now < t1) s += `<line x1="${x(now)}" x2="${x(now)}" y1="${top - 4}" y2="${H - 6}" stroke="var(--ink)" stroke-width="1" opacity=".5"/>`;
+    // a wedge for the share of a drink that was finished, starting at 12 o'clock
+    const pie = (cx, cy, r, f) => { const a = f * 2 * Math.PI; return `M${cx} ${cy}L${cx} ${cy - r}A${r} ${r} 0 ${f > 0.5 ? 1 : 0} 1 ${(cx + r * Math.sin(a)).toFixed(2)} ${(cy - r * Math.cos(a)).toFixed(2)}Z`; };
+    const diamond = (cx, cy, h, cls) => `<rect class="mk ${cls}" x="${cx - h}" y="${cy - h}" width="${2 * h}" height="${2 * h}" transform="rotate(45 ${cx} ${cy})"/>`;
     list.slice().sort((a, b) => a.t - b.t).forEach(e => {
       const r = rows.indexOf(e.p || 0);
       const cy = top + r * row + row / 2, cx = x(Math.min(Math.max(e.t, t0), t1));
-      const label = `${fmtTime(e.t)} · ${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ' (sipping)' : ''} · ${nameOf(e.p || 0)}`;
-      const mark = e.kind === 'water'
-        ? `<rect class="mk m-water" x="${cx - 4.5}" y="${cy - 4.5}" width="9" height="9" transform="rotate(45 ${cx} ${cy})"/>`
-        : `<circle class="mk ${e.open ? 'm-open' : 'm-drink'}" cx="${cx}" cy="${cy}" r="5.5"/>`;
+      const part = partOf(e);
+      const label = `${fmtTime(e.t)} · ${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ' (sipping)' : part < 1 ? ` (${partWord(part)} finished)` : ''} · ${nameOf(e.p || 0)}`;
+      let mark;
+      if (e.kind === 'water') {
+        if (e.open) mark = diamond(cx, cy, 4.5, 'm-wopen');
+        else if (part < 1) mark = diamond(cx, cy, 4.5, 'm-wopen') + diamond(cx, cy, 4.5 * Math.sqrt(part), 'm-wfill');
+        else mark = diamond(cx, cy, 4.5, 'm-water');
+      } else if (e.open) mark = `<circle class="mk m-open" cx="${cx}" cy="${cy}" r="5.5"/>`;
+      else if (part < 1) mark = `<circle class="mk m-open" cx="${cx}" cy="${cy}" r="5.5"/><path class="mk m-dfill" d="${pie(cx, cy, 5.5, part)}"/>`;
+      else mark = `<circle class="mk m-drink" cx="${cx}" cy="${cy}" r="5.5"/>`;
       s += `<g class="hitg"><circle class="hit" cx="${cx}" cy="${cy}" r="12" tabindex="0" role="button" aria-label="${esc(label)}" data-act="edit" data-id="${e.id}" data-tip-x="${cx}" data-tip-y="${cy - 8}"/>${mark}</g>`;
     });
     s += '</svg><div class="tip" hidden></div>';
     box.innerHTML = s;
     bindTips(box, el => {
       const e = E.find(x => x.id === el.dataset.id); if (!e) return null;
-      return [fmtTime(e.t), `${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ', still sipping' : ''}`, nameOf(e.p || 0), e.kind === 'water' ? 'water' : 'drink'];
+      return [fmtTime(e.t), `${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ', still sipping' : partOf(e) < 1 ? `, ${partWord(partOf(e))} finished` : ''}`, nameOf(e.p || 0), e.kind === 'water' ? 'water' : 'drink'];
     });
   }
   function bindTips(box, content) {
@@ -1191,26 +1277,27 @@ Aguardiente|0.5
         const gap = (sorted[idx - 1].t - e.t) / 60000;
         if (gap >= 1) rows += `<li class="tl-gap" aria-hidden="true">${fmtDur(gap)} later</li>`;
       }
-      const isW = e.kind === 'water';
+      const isW = e.kind === 'water', part = partOf(e);
       const bits = [];
-      if (!isW && e.start && !e.open) bits.push(`ordered ${fmtTime(e.start)} · ${fmtDur((e.t - e.start) / 60000)}`);
+      if (e.start && !e.open) bits.push(`${isW ? 'started' : 'ordered'} ${fmtTime(e.start)} · ${fmtDur((e.t - e.start) / 60000)}`);
       if (e.open) bits.push(`started ${fmtTime(e.start || e.t)}`);
-      if (isW) bits.push((WATER[e.unit] || ['Water'])[0].toLowerCase() + ' · ' + volume(e.ml || 0));
+      if (isW) bits.push(`${part < 1 ? partWord(part) + ' of a ' : ''}${(WATER[e.unit] || ['Water'])[0].toLowerCase()} · ${volume((e.ml || 0) * part)}`);
+      else if (part < 1 && !e.open) bits.push(`finished ${partWord(part)}`);
       if (e.where) bits.push(e.where);
       if (e.note) bits.push('“' + e.note + '”');
       rows += `<li><button class="tl-item" type="button" data-act="edit" data-id="${e.id}">
         <time datetime="${new Date(e.t).toISOString()}">${fmtTime(e.t)}</time>
         <span class="tl-ico ${isW ? 'water' : 'drink'}" aria-hidden="true">${isW ? I.water : I.drink}</span>
-        <span class="tl-main"><b>${esc(isW ? 'Water' : (e.name || 'Drink'))}${e.fav ? ' <span style="color:var(--drink)" aria-label="favorite">♥</span>' : ''}${e.open ? '<span class="badge-sip">Sipping</span>' : ''}</b>
+        <span class="tl-main"><b>${esc(isW ? 'Water' : (e.name || 'Drink'))}${e.fav ? ' <span style="color:var(--drink)" aria-label="favorite">♥</span>' : ''}${e.open ? '<span class="badge-sip">Sipping</span>' : part < 1 ? `<span class="badge-part" aria-label="${partWord(part)} finished">${partWord(part)}</span>` : ''}</b>
           <span>${multi ? `<span class="who-chip">${esc(labelOf(e.p || 0))}</span>` : ''}${esc(bits.join(' · '))}</span></span>
-        <span class="tl-side">${isW ? '' : '≈' + fmt1(+e.std || 0)}</span>
+        <span class="tl-side">${isW ? '' : '≈' + fmt1((+e.std || 0) * part)}</span>
       </button></li>`;
     });
     const filter = multi && list.length ? `<div class="chips" role="group" aria-label="Show entries for">${[[-1, 'Everyone']].concat(whoList.map(p => [p, labelOf(p)])).map(([v, l]) => `<button class="chip" type="button" data-act="tlwho" data-v="${v}" aria-pressed="${tlWho === v}">${esc(l)}</button>`).join('')}</div>` : '';
     return `<section aria-label="Timeline" style="display:grid;gap:10px">
       <div class="section-head"><h2>Timeline</h2><button class="linkish" type="button" data-act="add-past" data-p="${tlWho >= 0 ? tlWho : -1}">${isToday ? 'Add an earlier one' : 'Add to this day'}</button></div>
       ${filter}
-      ${sorted.length ? `<ul class="tl">${rows}</ul>` : `<div class="empty"><p>${list.length ? 'Nothing logged for this person on this day.' : isToday ? 'Nothing logged yet today.' : 'Nothing logged on this day.'}</p><p class="small">Each tap on + Drink or + Water records the time. Tap any entry later to add a name, change the time, or note where you were.</p></div>`}
+      ${sorted.length ? `<ul class="tl">${rows}</ul>` : `<div class="empty"><p>${list.length ? 'Nothing logged for this person on this day.' : isToday ? 'Nothing logged yet today.' : 'Nothing logged on this day.'}</p><p class="small">Tap + Drink to pick what you're having, or + Water for a water. Tap any entry later to change the time, how much was finished, or where you were.</p></div>`}
     </section>`;
   }
 
@@ -1219,7 +1306,7 @@ Aguardiente|0.5
     const who = shownIn(list);
     const rows = who.map(p => {
       const st = stats(byPerson(list, p));
-      return `<tr><td>${esc(labelOf(p))}</td><td>${st.drinks}</td><td>${fmt1(st.std)}</td><td>${st.waters}</td><td>${st.ml ? fmt1(st.ml / 1000) + ' L' : '–'}</td></tr>`;
+      return `<tr><td>${esc(labelOf(p))}</td><td>${fmtQ(st.drinks)}</td><td>${fmt1(st.std)}</td><td>${fmtQ(st.waters)}</td><td>${st.ml ? fmt1(st.ml / 1000) + ' L' : '–'}</td></tr>`;
     }).join('');
     const firstLast = who.map(p => {
       const st = stats(byPerson(list, p));
@@ -1239,8 +1326,8 @@ Aguardiente|0.5
     shownIn(list).forEach(p => {
       const mine = byPerson(list, p), st = stats(mine);
       if (!mine.length) return;
-      lines.push('', `${labelOf(p)}: ${st.drinks} drinks (≈${fmt1(st.std)} std), ${st.waters} waters (${volume(st.ml)})`);
-      mine.forEach(e => lines.push(`  ${fmtTime(e.t)}  ${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ' (sipping)' : ''}${e.start && !e.open ? ` (ordered ${fmtTime(e.start)})` : ''}${e.where ? ' @ ' + e.where : ''}`));
+      lines.push('', `${labelOf(p)}: ${fmtQ(st.drinks)} ${many(st.drinks, 'drink', 'drinks')} (≈${fmt1(st.std)} std), ${fmtQ(st.waters)} ${many(st.waters, 'water', 'waters')} (${volume(st.ml)})`);
+      mine.forEach(e => lines.push(`  ${fmtTime(e.t)}  ${e.kind === 'water' ? 'Water' : (e.name || 'Drink')}${e.open ? ' (sipping)' : partOf(e) < 1 ? ` (${partWord(partOf(e))} finished)` : ''}${e.start && !e.open ? ` (${e.kind === 'water' ? 'started' : 'ordered'} ${fmtTime(e.start)})` : ''}${e.where ? ' @ ' + e.where : ''}`));
     });
     return lines.join('\n');
   }
@@ -1251,18 +1338,22 @@ Aguardiente|0.5
     render();
     const ids = new Set(entries.map(e => e.id));
     const acts = [['Undo', () => { E = E.filter(x => !ids.has(x.id)); saveE(); render(); }]];
-    if (details) acts.unshift(['Add details', () => openEditor(entries[0].id, { focusName: true })]);
+    if (details) acts.unshift([details === 'edit' ? 'Edit' : 'Add details', () => openEditor(entries[0].id, { focusName: details !== 'edit' })]);
     toast(msg, acts);
   }
   const newDrink = (p, extra) => Object.assign({ id: uid(), kind: 'drink', p, t: Date.now(), start: null, open: false, name: '', std: 1.5, where: '', fav: false, note: '' }, extra || {});
-  const newWater = (p, t) => { const u = WATER[S.waterUnit] ? S.waterUnit : 'bottle'; return { id: uid(), kind: 'water', p, t: t || Date.now(), unit: u, ml: WATER[u][1], note: '' }; };
+  const newWater = (p, t, extra) => { const u = WATER[S.waterUnit] ? S.waterUnit : 'bottle'; return Object.assign({ id: uid(), kind: 'water', p, t: t || Date.now(), unit: u, ml: WATER[u][1], note: '' }, extra || {}); };
   function quickDrink(p) {
     const st = stats(byPerson(forDay(curKey()), p));
-    addEntries([newDrink(p)], `Drink ${st.drinks + 1} for ${nameOf(p)} at ${fmtTime(Date.now())}`, true);
+    addEntries([newDrink(p)], `Drink ${st.orders + 1} for ${nameOf(p)} at ${fmtTime(Date.now())}`, true);
   }
   function quickWater(p) {
     const st = stats(byPerson(forDay(curKey()), p));
-    addEntries([newWater(p)], `Water ${st.waters + 1} for ${nameOf(p)}`);
+    addEntries([newWater(p)], `Water ${st.bottles + 1} for ${nameOf(p)}`);
+  }
+  function startWater(p) {
+    const now = Date.now();
+    addEntries([newWater(p, now, { start: now, open: true })], `Water started for ${nameOf(p)}. Tap Finished when it's done.`);
   }
   function startDrink(p) {
     const now = Date.now();
@@ -1271,14 +1362,103 @@ Aguardiente|0.5
   function again(p, id) {
     const src = E.find(e => e.id === id); if (!src) return;
     const st = stats(byPerson(forDay(curKey()), p));
-    addEntries([newDrink(p, { name: src.name, std: src.std || 1.5, where: src.where || '' })], `${src.name} (drink ${st.drinks + 1}) for ${nameOf(p)}`);
+    addEntries([newDrink(p, { name: src.name, std: src.std || 1.5, where: src.where || '' })], `${src.name} (drink ${st.orders + 1}) for ${nameOf(p)}`);
   }
-  function finish(id) {
+  // part: 1 if it was all finished, or ¾, ½, ¼
+  function finish(id, part) {
     const e = E.find(x => x.id === id); if (!e) return;
-    const prev = { t: e.t, open: e.open, start: e.start };
+    const prev = { t: e.t, open: e.open, start: e.start, part: e.part };
     e.open = false; e.t = Date.now(); if (!e.start) e.start = prev.t;
+    if (part > 0 && part < 1) e.part = part; else delete e.part;
     saveE(); buzz(); render();
-    toast(`Finished after ${fmtDur((e.t - e.start) / 60000)}`, [['Undo', () => { e.t = prev.t; e.open = prev.open; e.start = prev.start; saveE(); render(); }]]);
+    const what = e.kind === 'water' ? 'Water' : (e.name || 'Drink');
+    toast(`${what}: ${part < 1 ? partWord(part) + ' finished' : 'finished'} after ${fmtDur((e.t - e.start) / 60000)}`, [['Undo', () => {
+      e.t = prev.t; e.open = prev.open; e.start = prev.start;
+      if (prev.part) e.part = prev.part; else delete e.part;
+      saveE(); render();
+    }]]);
+  }
+  const whenAgo = ts => {
+    const m = (Date.now() - ts) / 60000;
+    if (m < 60) return m < 1 ? 'just now' : Math.round(m) + ' min ago';
+    if (m < 1440) return Math.round(m / 60) + ' h ago';
+    const d = Math.round(m / 1440);
+    return d === 1 ? 'yesterday' : d + ' days ago';
+  };
+
+  // + Drink: pick from this person's past drinks, everyone's recent ones, or the recipe list
+  function openPicker(p, mode) {
+    let part = 1;
+    const hist = drinkHistory(p);
+    const stdOf = h => +((h.mine || h.last).std) || stdFor(h.name) || 1.5;
+    const el = openOverlay(`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="pk-title">
+      <div class="panel-bar"><h2 id="pk-title">${esc(labelOf(p))}: which drink?</h2><button class="icon-btn" type="button" data-act="close" aria-label="Close">${I.x}</button></div>
+      <div id="pk-top" style="display:grid;gap:10px"></div>
+      <div class="pk-search">${I.search}<label class="sr" for="pk-q">Search drinks or type a name</label><input id="pk-q" type="search" placeholder="Search ${CATALOG.length ? Math.floor(CATALOG.length / 10) * 10 + '+ ' : ''}drinks or type a name" autocomplete="off" autocorrect="off" enterkeyhint="done"></div>
+      <div class="pk-list" id="pk-list"></div>
+    </div>`);
+    const top = $('#pk-top', el), list = $('#pk-list', el), input = $('#pk-q', el);
+    const row = (name, std, meta, fav) => `<button class="pick" type="button" data-pk="pick" data-name="${esc(name)}" data-std="${std}"><span class="pk-n">${fav ? '<span class="heart" aria-label="favorite">♥</span> ' : ''}${esc(name)}</span><span class="pk-m">${esc(meta)}</span></button>`;
+    const drawTop = () => {
+      top.innerHTML = `<div class="seg wide" role="group" aria-label="Status"><button type="button" data-pk="mode" data-v="done" aria-pressed="${mode === 'done'}">Finished it</button><button type="button" data-pk="mode" data-v="open" aria-pressed="${mode === 'open'}">Just ordered</button></div>
+        ${mode === 'done'
+          ? `<div class="field"><span>How much did ${esc(nameOf(p))} finish?</span><div class="chips" role="group" aria-label="How much was finished">${PARTS.map(([v, l]) => `<button class="chip ${v < 1 ? 'frac' : ''}" type="button" data-pk="part" data-v="${v}" aria-pressed="${part === v}" aria-label="${v === 1 ? 'All of it' : l + ' of it'}">${v === 1 ? 'All of it' : l}</button>`).join('')}</div></div>`
+          : `<p class="muted small">Starts a timer. Tap Finished on ${esc(nameOf(p))}'s counter when it's done, or say how much was left.</p>`}`;
+    };
+    const drawList = () => {
+      const typed = input.value.trim(), q = norm(typed);
+      let h = '';
+      if (!q) {
+        h += `<button class="pick plain" type="button" data-pk="plain"><span class="pk-n">${I.drink}Just a drink, no name</span><span class="pk-m">add it later</span></button>`;
+        const own = hist.filter(x => x.mine).slice(0, 8), others = hist.filter(x => !x.mine).slice(0, 8);
+        if (own.length) h += `<p class="pk-h">${esc(nameOf(p))}'s drinks</p>` + own.map(x => row(x.name, stdOf(x), `×${x.count} · ${whenAgo(x.mine.t)}`, x.fav)).join('');
+        if (others.length) h += `<p class="pk-h">Others have had</p>` + others.map(x => row(x.name, stdOf(x), `${nameOf(x.last.p || 0)} · ${whenAgo(x.last.t)}`, x.fav)).join('');
+        if (hist.length < 4) {
+          const seen = new Set(hist.map(x => norm(x.name)));
+          const pop = POPULAR.filter(n => !seen.has(norm(n)) && catalogByName.has(norm(n))).slice(0, 8);
+          if (pop.length) h += `<p class="pk-h">Cruise favorites</p>` + pop.map(n => row(catalogByName.get(norm(n)).name, stdFor(n), `≈${fmt1(stdFor(n))} std`, false)).join('');
+        }
+      } else {
+        const pool = hist.map(x => ({ name: x.name, std: stdOf(x), meta: x.mine ? `×${x.count} · ${whenAgo(x.mine.t)}` : `${nameOf(x.last.p || 0)} · ${whenAgo(x.last.t)}`, fav: x.fav, mine: 1 }))
+          .concat(CATALOG.map(c => ({ name: c.name, std: c.std, meta: `≈${fmt1(c.std)} std`, fav: false, mine: 0 })));
+        const seen = new Set();
+        const hits = pool.filter(c => { const n = norm(c.name); if (seen.has(n) || !n.includes(q)) return false; seen.add(n); return true; })
+          .sort((a, b) => (norm(b.name).startsWith(q) - norm(a.name).startsWith(q)) || (b.mine - a.mine) || a.name.length - b.name.length).slice(0, 8);
+        if (!hits.some(c => norm(c.name) === q)) h += `<button class="pick add" type="button" data-pk="typed"><span class="pk-n">${I.plus}Log “${esc(typed)}”</span><span class="pk-m">new name</span></button>`;
+        h += hits.map(c => row(c.name, c.std, c.meta, c.fav)).join('');
+      }
+      list.innerHTML = h;
+    };
+    const commit = (name, std) => {
+      const now = Date.now();
+      const st = stats(byPerson(forDay(curKey()), p));
+      const e = mode === 'open'
+        ? newDrink(p, { t: now, start: now, open: true, name, std })
+        : newDrink(p, Object.assign({ name, std }, part < 1 ? { part } : {}));
+      closeTop();
+      addEntries([e], mode === 'open'
+        ? `Timer started: ${name || 'a drink'} for ${nameOf(p)}`
+        : `${name || 'Drink'}${part < 1 ? ` (${partWord(part)})` : ''} for ${nameOf(p)} · drink ${st.orders + 1} today`, 'edit');
+    };
+    el.addEventListener('click', ev => {
+      const b = ev.target.closest('[data-pk]'); if (!b) return;
+      const a = b.dataset.pk;
+      if (a === 'mode') { mode = b.dataset.v; drawTop(); }
+      else if (a === 'part') { part = +b.dataset.v; drawTop(); }
+      else if (a === 'pick') commit(b.dataset.name, +b.dataset.std || stdFor(b.dataset.name) || 1.5);
+      else if (a === 'plain') commit('', 1.5);
+      else if (a === 'typed') { const n = input.value.trim(); if (n) commit(n, stdFor(n) || 1.5); }
+    });
+    input.addEventListener('input', drawList);
+    input.addEventListener('keydown', ev => {
+      if (ev.key !== 'Enter') return;
+      ev.preventDefault();
+      const n = input.value.trim(); if (!n) return;
+      const known = hist.find(x => norm(x.name) === norm(n));
+      commit(known ? known.name : n, known ? stdOf(known) : (stdFor(n) || 1.5));
+    });
+    drawTop();
+    drawList();
   }
 
   // Round: one tap logs a drink or a water for everyone selected
@@ -1286,28 +1466,39 @@ Aguardiente|0.5
     const vis = visibleIdx();
     const chosen = new Set((lastRound || vis).filter(p => vis.includes(p)));
     if (!chosen.size) vis.forEach(p => chosen.add(p));
-    let name = '';
+    let name = '', std = null, mode = 'done';
+    const recent = drinkHistory(-1).slice(0, 8);
     const el = openOverlay(`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="rd-title">
       <div class="panel-bar"><h2 id="rd-title">${kind === 'water' ? 'Water for the table' : 'Round of drinks'}</h2><button class="icon-btn" type="button" data-act="close" aria-label="Close">${I.x}</button></div>
       <div id="rd-body" style="display:grid;gap:16px"></div></div>`);
     const body = $('#rd-body', el);
     const draw = () => {
       body.innerHTML = `
+        <div class="seg wide" role="group" aria-label="Status"><button type="button" data-rd="mode" data-v="done" aria-pressed="${mode === 'done'}">${kind === 'water' ? 'Drank it' : 'Finished'}</button><button type="button" data-rd="mode" data-v="open" aria-pressed="${mode === 'open'}">${kind === 'water' ? 'Just started' : 'Just ordered'}</button></div>
         <div class="field"><span>Who's in?</span><div class="chips">${vis.map(p => `<button class="chip" type="button" data-rd="p" data-v="${p}" aria-pressed="${chosen.has(p)}">${esc(labelOf(p))}</button>`).join('')}</div></div>
-        ${kind === 'drink' ? `<label class="field" for="rd-name"><span>Same drink for everyone? (optional)</span><input id="rd-name" value="${esc(name)}" placeholder="e.g. Champagne toast" autocomplete="off"></label><p class="muted small">Leave it blank and add names one by one later from the timeline.</p>` : ''}
-        <button class="big ${kind === 'water' ? 'water' : 'drink'}" type="button" data-rd="go" ${chosen.size ? '' : 'disabled'}>${kind === 'water' ? I.water : I.cheers}Log ${chosen.size} ${kind === 'water' ? (chosen.size === 1 ? 'water' : 'waters') : (chosen.size === 1 ? 'drink' : 'drinks')}</button>`;
+        ${kind === 'drink' ? `<label class="field" for="rd-name"><span>Same drink for everyone? (optional)</span><input id="rd-name" value="${esc(name)}" placeholder="e.g. Champagne toast" autocomplete="off"></label>
+          ${recent.length ? `<div class="chips" role="group" aria-label="Recent drinks">${recent.map(h => `<button class="chip" type="button" data-rd="name" data-name="${esc(h.name)}" data-std="${+(h.last.std) || ''}" aria-pressed="${norm(name) === norm(h.name)}">${esc(h.name)}</button>`).join('')}</div>` : ''}
+          <p class="muted small">Leave it blank and add names one by one later from the timeline.</p>` : ''}
+        <button class="big ${kind === 'water' ? 'water' : 'drink'}" type="button" data-rd="go" ${chosen.size ? '' : 'disabled'}>${kind === 'water' ? I.water : I.cheers}${mode === 'open' ? `Start ${chosen.size === 1 ? 'a timer' : `timers for ${chosen.size}`}` : `Log ${chosen.size} ${kind === 'water' ? (chosen.size === 1 ? 'water' : 'waters') : (chosen.size === 1 ? 'drink' : 'drinks')}`}</button>`;
     };
     body.addEventListener('click', ev => {
       const b = ev.target.closest('[data-rd]'); if (!b) return;
       const nm = $('#rd-name', body); if (nm) name = nm.value.trim();
       if (b.dataset.rd === 'p') { const p = +b.dataset.v; if (chosen.has(p)) chosen.delete(p); else chosen.add(p); draw(); return; }
+      if (b.dataset.rd === 'mode') { mode = b.dataset.v; draw(); return; }
+      if (b.dataset.rd === 'name') { name = b.dataset.name; std = +b.dataset.std || null; draw(); return; }
       if (b.dataset.rd === 'go' && chosen.size) {
         lastRound = [...chosen];
         const now = Date.now();
         const ps = [...chosen].sort((a, c) => a - c);
-        const items = ps.map(p => kind === 'water' ? newWater(p, now) : newDrink(p, { t: now, name, std: stdFor(name) || 1.5 }));
+        const sipping = mode === 'open' ? { start: now, open: true } : {};
+        const known = recent.find(h => norm(h.name) === norm(name));
+        const strength = (known && norm(name) && (std || +known.last.std)) || stdFor(name) || 1.5;
+        const items = ps.map(p => kind === 'water' ? newWater(p, now, sipping) : newDrink(p, Object.assign({ t: now, name, std: strength }, sipping)));
         closeTop();
-        addEntries(items, `${kind === 'water' ? 'Water' : (name || 'Round')} logged for ${joinNames(ps.map(nameOf))}`);
+        addEntries(items, mode === 'open'
+          ? `${kind === 'water' ? 'Water' : (name || 'Drinks')} started for ${joinNames(ps.map(nameOf))}`
+          : `${kind === 'water' ? 'Water' : (name || 'Round')} logged for ${joinNames(ps.map(nameOf))}`);
       }
     });
     draw();
@@ -1382,6 +1573,10 @@ Aguardiente|0.5
         (recipeStd != null ? `<button class="chip" type="button" data-ed="std" data-v="${recipeStd}" aria-pressed="${Math.abs(d.std - recipeStd) < 0.01}">This recipe ≈${fmt1(recipeStd)}</button>` : '');
       return `<span>Strength</span><div class="chips">${chips}</div><span class="muted small">Counts as about ${fmt1(d.std)} standard drinks (0.6 oz of alcohol each).</span>`;
     };
+    const amountHTML = () => `<div class="field"><span>How much was finished</span><div class="chips">${PARTS.map(([v, l]) => `<button class="chip ${v < 1 ? 'frac' : ''}" type="button" data-ed="part" data-v="${v}" aria-pressed="${partOf(d) === v}" aria-label="${v === 1 ? 'All of it' : l + ' of it'}">${v === 1 ? 'All of it' : l}</button>`).join('')}</div></div>`;
+    const statusHTML = () => `<div class="field"><span>Status</span><div class="seg" role="group" aria-label="Status"><button type="button" data-ed="open" data-v="0" aria-pressed="${!d.open}">Finished</button><button type="button" data-ed="open" data-v="1" aria-pressed="${!!d.open}">Still sipping</button></div></div>`;
+    const finishedHTML = () => `<label class="field" for="ed-t"><span>Finished at</span><span class="inline"><input id="ed-t" type="datetime-local" value="${toInput(d.t)}"><button class="btn small" type="button" data-ed="now">Now</button></span></label>`;
+    const startHTML = word => `<label class="field" for="ed-start"><span>${word} at ${d.open ? '' : '(optional, shows how long it lasted)'}</span><span class="inline"><input id="ed-start" type="datetime-local" value="${d.start ? toInput(d.start) : ''}"><button class="btn small" type="button" data-ed="start-now">Now</button>${d.start && !d.open ? '<button class="btn small" type="button" data-ed="start-clear">Clear</button>' : ''}</span></label>`;
     const draw = () => {
       const isW = d.kind === 'water';
       const who = whoChoices();
@@ -1389,14 +1584,16 @@ Aguardiente|0.5
         <div class="seg" role="group" aria-label="Type"><button type="button" data-ed="kind" data-v="drink" aria-pressed="${!isW}">Drink</button><button type="button" data-ed="kind" data-v="water" aria-pressed="${isW}">Water</button></div>
         ${who.length > 1 ? `<div class="field"><span>Who</span><div class="chips">${who.map(p => `<button class="chip" type="button" data-ed="p" data-v="${p}" aria-pressed="${(d.p || 0) === p}">${esc(labelOf(p))}</button>`).join('')}</div></div>` : ''}
         ${isW ? `
-          <div class="field"><span>How much</span><div class="chips">${Object.entries(WATER).map(([k, [l, ml, oz]]) => `<button class="chip" type="button" data-ed="unit" data-v="${k}" aria-pressed="${d.unit === k}">${l} · ${oz}</button>`).join('')}</div></div>
-          <label class="field" for="ed-t"><span>Time</span><span class="inline"><input id="ed-t" type="datetime-local" value="${toInput(d.t)}"><button class="btn small" type="button" data-ed="now">Now</button></span></label>
+          <div class="field"><span>Size</span><div class="chips">${Object.entries(WATER).map(([k, [l, ml, oz]]) => `<button class="chip" type="button" data-ed="unit" data-v="${k}" aria-pressed="${d.unit === k}">${l} · ${oz}</button>`).join('')}</div></div>
+          ${statusHTML()}
+          ${d.open ? '' : finishedHTML() + amountHTML()}
+          ${startHTML('Started')}
         ` : `
           <label class="field" for="ed-name"><span>Drink name (optional)</span><input id="ed-name" value="${esc(d.name || '')}" placeholder="e.g. Coconut Patrón Margarita" autocomplete="off"></label>
           <div class="sugg" id="ed-sugg" hidden></div>
-          <div class="field"><span>Status</span><div class="seg" role="group" aria-label="Status"><button type="button" data-ed="open" data-v="0" aria-pressed="${!d.open}">Finished</button><button type="button" data-ed="open" data-v="1" aria-pressed="${!!d.open}">Still sipping</button></div></div>
-          ${d.open ? '' : `<label class="field" for="ed-t"><span>Finished at</span><span class="inline"><input id="ed-t" type="datetime-local" value="${toInput(d.t)}"><button class="btn small" type="button" data-ed="now">Now</button></span></label>`}
-          <label class="field" for="ed-start"><span>Ordered at ${d.open ? '' : '(optional, shows how long it lasted)'}</span><span class="inline"><input id="ed-start" type="datetime-local" value="${d.start ? toInput(d.start) : ''}"><button class="btn small" type="button" data-ed="start-now">Now</button>${d.start && !d.open ? '<button class="btn small" type="button" data-ed="start-clear">Clear</button>' : ''}</span></label>
+          ${statusHTML()}
+          ${d.open ? '' : finishedHTML() + amountHTML()}
+          ${startHTML('Ordered')}
           <div class="field" id="ed-strength">${strengthHTML()}</div>
           <div class="field"><span>Where (optional)</span><div class="chips">${SPOTS.map(s => `<button class="chip" type="button" data-ed="where" data-v="${esc(s)}" aria-pressed="${d.where === s}">${esc(s)}</button>`).join('')}</div></div>
           <div class="field"><span>Order it again?</span><div class="chips"><button class="chip" type="button" data-ed="fav" aria-pressed="${!!d.fav}">${d.fav ? '♥ Yes, a favorite' : '♡ Mark as favorite'}</button></div></div>
@@ -1440,10 +1637,11 @@ Aguardiente|0.5
         readInputs();
         const err = $('#ed-err', body);
         if (!d.t || isNaN(d.t)) { err.textContent = 'Pick a time for this entry.'; err.hidden = false; return; }
-        if (d.kind === 'drink' && d.start && !d.open && d.start > d.t) { err.textContent = 'The ordered time is after the finished time. Fix one of them.'; err.hidden = false; return; }
-        if (d.kind === 'drink' && d.open && !d.start) d.start = d.t;
-        if (d.kind === 'drink' && d.open) d.t = d.start;
-        if (d.kind === 'water') { delete d.start; delete d.open; delete d.std; delete d.where; delete d.fav; delete d.name; }
+        if (d.start && !d.open && d.start > d.t) { err.textContent = `The ${d.kind === 'water' ? 'started' : 'ordered'} time is after the finished time. Fix one of them.`; err.hidden = false; return; }
+        if (d.open && !d.start) d.start = d.t;
+        if (d.open) { d.t = d.start; delete d.part; }
+        if (!(d.part > 0 && d.part < 1)) delete d.part;
+        if (d.kind === 'water') { delete d.std; delete d.where; delete d.fav; delete d.name; if (!d.start) delete d.start; if (!d.open) delete d.open; }
         else { delete d.unit; delete d.ml; }
         const i = E.findIndex(e => e.id === d.id);
         if (i >= 0) E[i] = d; else E.push(d);
@@ -1469,6 +1667,7 @@ Aguardiente|0.5
       else if (a === 'start-clear') d.start = null;
       else if (a === 'open') { d.open = b.dataset.v === '1'; if (d.open) { d.start = d.start || d.t; } else if (!existing || existing.open) d.t = Date.now(); }
       else if (a === 'std') d.std = +b.dataset.v;
+      else if (a === 'part') d.part = +b.dataset.v;
       else if (a === 'where') d.where = d.where === b.dataset.v ? '' : b.dataset.v;
       else if (a === 'fav') d.fav = !d.fav;
       else if (a === 'pick') { d.name = b.dataset.name; const s = +b.dataset.std; if (s) d.std = s; }
@@ -1491,8 +1690,8 @@ Aguardiente|0.5
       <div class="panel-bar"><h2 id="dp-title">Pick a day</h2><button class="icon-btn" type="button" data-act="close" aria-label="Close">${I.x}</button></div>
       <div class="daylist">${list.map(k => {
         const items = forDay(k), st = stats(items);
-        const who = vis.length > 1 ? vis.map(p => `${nameOf(p)} ${stats(byPerson(items, p)).drinks}`).join(' · ') : '';
-        return `<button type="button" data-act="pickday" data-k="${k}" aria-current="${k === sel}"><b>${esc(dayName(k))}${k === cur ? ' · Today' : ''}</b><span class="tot"><b>${st.drinks}</b> drinks<br>${st.waters} water</span><span>${esc(dateLabel(k))}${portOf(k) ? ' · ' + esc(portOf(k)) : ''}${who ? ' · ' + esc(who) : ''}</span></button>`;
+        const who = vis.length > 1 ? vis.map(p => `${nameOf(p)} ${fmtQ(stats(byPerson(items, p)).drinks)}`).join(' · ') : '';
+        return `<button type="button" data-act="pickday" data-k="${k}" aria-current="${k === sel}"><b>${esc(dayName(k))}${k === cur ? ' · Today' : ''}</b><span class="tot"><b>${fmtQ(st.drinks)}</b> ${many(st.drinks, 'drink', 'drinks')}<br>${fmtQ(st.waters)} water</span><span>${esc(dateLabel(k))}${portOf(k) ? ' · ' + esc(portOf(k)) : ''}${who ? ' · ' + esc(who) : ''}</span></button>`;
       }).join('')}</div>
     </div>`);
   }
@@ -1524,7 +1723,7 @@ Aguardiente|0.5
     const tableRows = days.map((k, i) => {
       const s = stats(filt(forDay(k)));
       const future = k > cur;
-      return `<tr class="click ${k === cur ? 'today' : ''} ${future ? 'future' : ''}" data-act="pickday" data-k="${k}" tabindex="0"><td>Day ${i + 1} · ${esc(dateLabel(k, { month: 'short', day: 'numeric' }))}${portOf(k) ? `<br><span class="muted small">${esc(portOf(k))}</span>` : ''}</td><td>${future ? '–' : s.drinks}</td><td>${future ? '–' : fmt1(s.std)}</td><td>${future ? '–' : s.waters}</td></tr>`;
+      return `<tr class="click ${k === cur ? 'today' : ''} ${future ? 'future' : ''}" data-act="pickday" data-k="${k}" tabindex="0"><td>Day ${i + 1} · ${esc(dateLabel(k, { month: 'short', day: 'numeric' }))}${portOf(k) ? `<br><span class="muted small">${esc(portOf(k))}</span>` : ''}</td><td>${future ? '–' : fmtQ(s.drinks)}</td><td>${future ? '–' : fmt1(s.std)}</td><td>${future ? '–' : fmtQ(s.waters)}</td></tr>`;
     }).join('');
     const pkg = +S.pkg || 0, price = +S.price || 0;
     const outside = E.filter(e => !inTrip(dayKey(e.t))).length;
@@ -1532,9 +1731,9 @@ Aguardiente|0.5
       <div class="section-head"><h2 style="font-family:var(--font-display);font-weight:400;font-size:26px">${esc(S.days)}-day cruise</h2><span class="muted small">${esc(dateLabel(days[0] || cur, { month: 'short', day: 'numeric' }))} – ${esc(dateLabel(days[days.length - 1] || cur, { month: 'short', day: 'numeric' }))}</span></div>
       ${whoList.length > 1 ? `<div class="chips" role="group" aria-label="Show">${[[-1, 'Everyone']].concat(whoList.map(p => [p, labelOf(p)])).map(([v, l]) => `<button class="chip" type="button" data-act="tripwho" data-v="${v}" aria-pressed="${tripWho === v}">${esc(l)}</button>`).join('')}</div>` : ''}
       <div class="stats">
-        <div class="stat"><span class="k">Drinks</span><span class="v">${st.drinks}</span><span class="d">${fmt1(st.drinks / elapsed)} a day so far</span></div>
+        <div class="stat"><span class="k">Drinks</span><span class="v">${fmtQ(st.drinks)}</span><span class="d">${fmt1(st.drinks / elapsed)} a day so far</span></div>
         <div class="stat"><span class="k">Standard drinks</span><span class="v">≈${fmt1(st.std)}</span><span class="d">${fmt1(st.std / elapsed)} a day</span></div>
-        <div class="stat"><span class="k">Water</span><span class="v">${st.waters}</span><span class="d">${st.ml ? volume(st.ml) : 'none yet'}</span></div>
+        <div class="stat"><span class="k">Water</span><span class="v">${fmtQ(st.waters)}</span><span class="d">${st.ml ? volume(st.ml) : 'none yet'}</span></div>
         <div class="stat"><span class="k">Water per drink</span><span class="v">${st.drinks ? fmt1(ratio) : '–'}</span><span class="d">${st.drinks ? (ratio >= 1 ? 'At least one each. Nice.' : 'Aim for one per drink') : 'Log a drink to see this'}</span></div>
       </div>
       <section class="card" aria-label="Drinks and water by day">
@@ -1546,7 +1745,7 @@ Aguardiente|0.5
       ${Object.keys(favs).length ? `<section class="card"><h2 style="font-size:18px">Favorites ♥</h2><div class="list">${top(favs).map(([n, c]) => `<div><span>${esc(n)}</span><span>×${c}</span></div>`).join('')}</div></section>` : ''}
       ${Object.keys(names).length ? `<section class="card"><h2 style="font-size:18px">Most ordered</h2><div class="list">${top(names).map(([n, c]) => `<div><span>${esc(n)}</span><span>×${c}</span></div>`).join('')}</div></section>` : ''}
       ${Object.keys(spots).length ? `<section class="card"><h2 style="font-size:18px">Favorite spots</h2><div class="list">${top(spots).map(([n, c]) => `<div><span>${esc(n)}</span><span>×${c}</span></div>`).join('')}</div></section>` : ''}
-      ${pkg ? `<section class="card"><h2 style="font-size:18px">Drink package value</h2><div class="list">${whoList.map(p => { const s = stats(byPerson(tripEntries(), p)); const value = s.drinks * price, paid = pkg * elapsed; return `<div><span>${esc(nameOf(p))}: ≈${money(value)} of drinks</span><span>${money(paid)} paid so far</span></div>`; }).join('')}</div><p class="muted small">Uses ${money(price)} per drink and ${money(pkg)} per day, both editable in Settings.</p></section>` : ''}
+      ${pkg ? `<section class="card"><h2 style="font-size:18px">Drink package value</h2><div class="list">${whoList.map(p => { const s = stats(byPerson(tripEntries(), p)); const value = s.orders * price, paid = pkg * elapsed; return `<div><span>${esc(nameOf(p))}: ≈${money(value)} of drinks</span><span>${money(paid)} paid so far</span></div>`; }).join('')}</div><p class="muted small">Uses ${money(price)} per drink and ${money(pkg)} per day, both editable in Settings.</p></section>` : ''}
       <div class="btn-row"><button class="btn" type="button" data-act="copy-trip">${I.copy}Copy trip summary</button><button class="btn" type="button" data-go="stats">See fun stats</button></div>
       ${backupNudge()}`;
     drawTripChart(days, filt, cur);
@@ -1594,16 +1793,16 @@ Aguardiente|0.5
     data.forEach((v, i) => {
       const cx = left + band * i + band / 2;
       const xd = cx - bw - 1, xw = cx + 1;
-      s += `<g class="hitg"><rect class="hit" x="${left + band * i}" y="${top}" width="${band}" height="${ph + bottom}" tabindex="0" role="button" aria-label="${esc(`Day ${i + 1}: ${v.d} drinks, ${v.w} water`)}" data-act="pickday" data-k="${v.k}" data-tip-x="${cx}" data-tip-y="${Math.min(y(Math.max(v.d, v.w)), y0 - 10)}" data-i="${i}"/>`;
+      s += `<g class="hitg"><rect class="hit" x="${left + band * i}" y="${top}" width="${band}" height="${ph + bottom}" tabindex="0" role="button" aria-label="${esc(`Day ${i + 1}: ${fmtQ(v.d)} drinks, ${fmtQ(v.w)} water`)}" data-act="pickday" data-k="${v.k}" data-tip-x="${cx}" data-tip-y="${Math.min(y(Math.max(v.d, v.w)), y0 - 10)}" data-i="${i}"/>`;
       s += `<path class="mk" d="${barPath(xd, y(v.d), bw, y0 - y(v.d), y0)}" fill="var(--drink)"/><path class="mk" d="${barPath(xw, y(v.w), bw, y0 - y(v.w), y0)}" fill="var(--water)"/></g>`;
-      if (v.d && v.d === maxD) s += `<text class="bar-label" x="${xd + bw / 2}" y="${y(v.d) - 5}" text-anchor="middle">${v.d}</text>`;
+      if (v.d && v.d === maxD) s += `<text class="bar-label" x="${xd + bw / 2}" y="${y(v.d) - 5}" text-anchor="middle">${fmtQ(v.d)}</text>`;
       s += `<text class="axis-t" x="${cx}" y="${H - 12}" text-anchor="middle" style="${v.k === cur ? 'font-weight:700;fill:var(--ink)' : ''}">${i + 1}</text>`;
     });
     s += `<text class="axis-t" x="${left + pw / 2}" y="${H}" text-anchor="middle">Cruise day</text>`;
     s += `<line x1="${left}" x2="${W - right}" y1="${y0}" y2="${y0}" stroke="var(--muted)" stroke-width="1"/>`;
     s += '</svg><div class="tip" hidden></div>';
     box.innerHTML = s;
-    chartTips(box, data, v => [`${dayName(v.k)} · ${dateLabel(v.k, { month: 'short', day: 'numeric' })}`, ['drink', `${v.d} drinks`], ['water', `${v.w} water`]], W);
+    chartTips(box, data, v => [`${dayName(v.k)} · ${dateLabel(v.k, { month: 'short', day: 'numeric' })}`, ['drink', `${fmtQ(v.d)} ${many(v.d, 'drink', 'drinks')}`], ['water', `${fmtQ(v.w)} water`]], W);
   }
   function tripText() {
     const days = tripDays(), cur = curKey(), who = shownIn(tripEntries());
@@ -1611,10 +1810,10 @@ Aguardiente|0.5
     days.forEach((k, i) => {
       if (k > cur) return;
       const items = forDay(k);
-      const parts = who.map(p => { const s = stats(byPerson(items, p)); return `${who.length > 1 ? nameOf(p) + ' ' : ''}${s.drinks} drinks, ${s.waters} water`; });
+      const parts = who.map(p => { const s = stats(byPerson(items, p)); return `${who.length > 1 ? nameOf(p) + ' ' : ''}${fmtQ(s.drinks)} ${many(s.drinks, 'drink', 'drinks')}, ${fmtQ(s.waters)} water`; });
       lines.push(`Day ${i + 1} (${dateLabel(k, { month: 'short', day: 'numeric' })}${portOf(k) ? ', ' + portOf(k) : ''}): ${parts.join(' · ')}`);
     });
-    who.forEach(p => { const s = stats(byPerson(tripEntries(), p)); lines.push('', `${labelOf(p)} total: ${s.drinks} drinks (≈${fmt1(s.std)} std), ${s.waters} water (${volume(s.ml)})`); });
+    who.forEach(p => { const s = stats(byPerson(tripEntries(), p)); lines.push('', `${labelOf(p)} total: ${fmtQ(s.drinks)} ${many(s.drinks, 'drink', 'drinks')} (≈${fmt1(s.std)} std), ${fmtQ(s.waters)} water (${volume(s.ml)})`); });
     return lines.join('\n');
   }
   function backupNudge() {
@@ -1647,12 +1846,13 @@ Aguardiente|0.5
       const goal = +S.waterGoal || 0;
       const dayList = scope === 'today' ? [curKey()] : tripDays().filter(k => k <= curKey());
       dayList.forEach(k => {
-        const n = waters.filter(e => dayKey(e.t) === k).length;
+        const n = waters.filter(e => dayKey(e.t) === k).reduce((a, e) => a + partOf(e), 0);
         if (goal && n >= goal) { goalDays++; streak++; best = Math.max(best, streak); } else streak = 0;
       });
+      const dq = drinks.reduce((a, e) => a + partOf(e), 0), wq = waters.reduce((a, e) => a + partOf(e), 0);
       return {
-        p, drinks: drinks.length, waters: waters.length, std: drinks.reduce((a, e) => a + (+e.std || 0), 0), ml: waters.reduce((a, e) => a + (+e.ml || 0), 0),
-        ratio: drinks.length ? waters.length / drinks.length : null,
+        p, drinks: dq, waters: wq, std: drinks.reduce((a, e) => a + (+e.std || 0) * partOf(e), 0), ml: waters.reduce((a, e) => a + (+e.ml || 0) * partOf(e), 0),
+        ratio: dq ? wq / dq : null,
         sip: timed.length >= 2 ? timed.reduce((a, e) => a + (e.t - e.start), 0) / timed.length / 60000 : null,
         unique: Object.keys(nameCount).length, topName, topSpot, latest, earliest, goalDays, bestStreak: best, days: dayList.length
       };
@@ -1699,34 +1899,35 @@ Aguardiente|0.5
       i = j;
     }
     const hours = Array(24).fill(0);
-    drinks.forEach(e => { hours[((Math.floor(minsIntoDay(e.t) / 60) % 24) + 24) % 24]++; });
+    drinks.forEach(e => { hours[((Math.floor(minsIntoDay(e.t) / 60) % 24) + 24) % 24] += partOf(e); });
     const peakH = hours.indexOf(Math.max(...hours));
     const groupNames = {};
     drinks.forEach(e => { if (e.name) groupNames[e.name] = (groupNames[e.name] || 0) + 1; });
     const fav = Object.entries(groupNames).sort((a, b) => b[1] - a[1])[0];
     let busiest = null;
-    if (scope === 'trip') tripDays().forEach(k => { const n = drinks.filter(e => dayKey(e.t) === k).length; if (n && (!busiest || n > busiest[1])) busiest = [k, n]; });
+    const amount = list => list.reduce((a, e) => a + partOf(e), 0);
+    if (scope === 'trip') tripDays().forEach(k => { const n = amount(drinks.filter(e => dayKey(e.t) === k)); if (n && (!busiest || n > busiest[1])) busiest = [k, n]; });
     const timed = drinks.filter(e => !e.open && e.start && e.t - e.start >= 2 * 60000);
-    const totalMl = pool.filter(e => e.kind === 'water').reduce((a, e) => a + (+e.ml || 0), 0);
+    const totalMl = pool.filter(e => e.kind === 'water').reduce((a, e) => a + (+e.ml || 0) * partOf(e), 0);
     const height = totalMl / 500 * 0.22;
     const landmark = LANDMARKS.filter(l => height >= l[1]).pop();
     let seaPort = null;
     if (scope === 'trip') {
       const sea = [], port = [];
-      tripDays().filter(k => k <= curKey()).forEach(k => { const name = portOf(k); if (!name) return; const n = drinks.filter(e => dayKey(e.t) === k).length; (/\bsea\b/i.test(name) ? sea : port).push(n); });
+      tripDays().filter(k => k <= curKey()).forEach(k => { const name = portOf(k); if (!name) return; const n = amount(drinks.filter(e => dayKey(e.t) === k)); (/\bsea\b/i.test(name) ? sea : port).push(n); });
       if (sea.length && port.length) seaPort = [sea.reduce((a, b) => a + b, 0) / sea.length, port.reduce((a, b) => a + b, 0) / port.length];
     }
-    return { per, awards, drinks: drinks.length, std: drinks.reduce((a, e) => a + (+e.std || 0), 0), waters: pool.filter(e => e.kind === 'water').length, totalMl, rounds, hours, peakH, fav, busiest, timedAvg: timed.length ? timed.reduce((a, e) => a + (e.t - e.start), 0) / timed.length / 60000 : null, height, landmark, seaPort };
+    return { per, awards, drinks: amount(drinks), std: drinks.reduce((a, e) => a + (+e.std || 0) * partOf(e), 0), waters: amount(pool.filter(e => e.kind === 'water')), totalMl, rounds, hours, peakH, fav, busiest, timedAvg: timed.length ? timed.reduce((a, e) => a + (e.t - e.start), 0) / timed.length / 60000 : null, height, landmark, seaPort };
   }
   function renderStats() {
     const c = computeStats(statsScope);
     const multi = c.per.length > 1;
     const facts = [];
-    if (c.drinks) facts.push(['Drinks', `${c.drinks}`, `≈${fmt1(c.std)} standard drinks`]);
-    if (c.waters) facts.push(['Water', `${c.waters}`, volume(c.totalMl)]);
+    if (c.drinks) facts.push(['Drinks', fmtQ(c.drinks), `≈${fmt1(c.std)} standard drinks`]);
+    if (c.waters) facts.push(['Water', fmtQ(c.waters), volume(c.totalMl)]);
     if (multi) facts.push(['Rounds together', `${c.rounds}`, 'drinks within 10 minutes of each other']);
-    if (c.drinks) facts.push(['Busiest hour', `${hourLabel(c.peakH + (+S.cutoff || 0))}`, `${c.hours[c.peakH]} drinks between ${hourLabel(c.peakH + (+S.cutoff || 0))} and ${hourLabel(c.peakH + (+S.cutoff || 0) + 1)}`]);
-    if (c.busiest) facts.push(['Busiest day', dayName(c.busiest[0]), `${c.busiest[1]} drinks${portOf(c.busiest[0]) ? ' · ' + portOf(c.busiest[0]) : ''}`]);
+    if (c.drinks) facts.push(['Busiest hour', `${hourLabel(c.peakH + (+S.cutoff || 0))}`, `${fmtQ(c.hours[c.peakH])} ${many(c.hours[c.peakH], 'drink', 'drinks')} between ${hourLabel(c.peakH + (+S.cutoff || 0))} and ${hourLabel(c.peakH + (+S.cutoff || 0) + 1)}`]);
+    if (c.busiest) facts.push(['Busiest day', dayName(c.busiest[0]), `${fmtQ(c.busiest[1])} ${many(c.busiest[1], 'drink', 'drinks')}${portOf(c.busiest[0]) ? ' · ' + portOf(c.busiest[0]) : ''}`]);
     if (c.fav) facts.push([multi ? 'Group favorite' : 'Your favorite', c.fav[0], `ordered ${c.fav[1]} time${c.fav[1] > 1 ? 's' : ''}`]);
     if (c.timedAvg != null) facts.push(['Average sip time', fmtDur(c.timedAvg), 'from order to empty glass']);
     if (c.seaPort) facts.push(['Sea days vs. port days', `${fmt1(c.seaPort[0])} vs ${fmt1(c.seaPort[1])}`, 'average drinks per day']);
@@ -1737,9 +1938,9 @@ Aguardiente|0.5
       ${facts.length ? `<section class="card" aria-label="Ship's tally"><h2 style="font-size:18px">Ship's tally</h2><div class="facts">${facts.map(([k, v, d]) => `<div class="fact"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span><span class="d">${esc(d)}</span></div>`).join('')}</div>
         ${c.landmark ? `<p class="funfact">Stacked up, ${multi ? 'everyone\'s' : 'your'} water would make a tower of ${Math.round(c.totalMl / 500)} bottles about ${fmt1(c.height)} m (${Math.round(c.height * 3.281)} ft) tall, taller than ${esc(c.landmark[0])}.</p>` : ''}</section>` : ''}
       ${c.drinks ? `<section class="card" aria-label="When the drinks happen"><div class="section-head"><h2>When the drinks happen</h2><span class="muted small">Drinks by hour</span></div><div class="chartbox" id="hourchart"></div>
-        <details><summary class="small">See the numbers</summary><div class="tablewrap"><table class="sumtable"><thead><tr><th>Hour</th><th>Drinks</th></tr></thead><tbody>${c.hours.map((n, i) => n ? `<tr><td>${hourLabel(i + (+S.cutoff || 0))}–${hourLabel(i + (+S.cutoff || 0) + 1)}</td><td>${n}</td></tr>` : '').join('')}</tbody></table></div></details></section>` : ''}
+        <details><summary class="small">See the numbers</summary><div class="tablewrap"><table class="sumtable"><thead><tr><th>Hour</th><th>Drinks</th></tr></thead><tbody>${c.hours.map((n, i) => n ? `<tr><td>${hourLabel(i + (+S.cutoff || 0))}–${hourLabel(i + (+S.cutoff || 0) + 1)}</td><td>${fmtQ(n)}</td></tr>` : '').join('')}</tbody></table></div></details></section>` : ''}
       ${c.per.length ? `<section class="card" aria-label="Leaderboard"><h2 style="font-size:18px">${multi ? 'Side by side' : 'Your numbers'}</h2>
-        <div class="tablewrap"><table class="sumtable"><thead><tr><th>Who</th><th>Drinks</th><th>≈ Std</th><th>Water</th><th>W/D</th></tr></thead><tbody>${c.per.map(x => `<tr><td>${esc(labelOf(x.p))}${x.topName ? `<br><span class="muted small">Signature: ${esc(x.topName[0])}</span>` : ''}</td><td>${x.drinks}</td><td>${fmt1(x.std)}</td><td>${x.waters}</td><td>${x.ratio != null ? fmt1(x.ratio) : '–'}</td></tr>`).join('')}</tbody></table></div>
+        <div class="tablewrap"><table class="sumtable"><thead><tr><th>Who</th><th>Drinks</th><th>≈ Std</th><th>Water</th><th>W/D</th></tr></thead><tbody>${c.per.map(x => `<tr><td>${esc(labelOf(x.p))}${x.topName ? `<br><span class="muted small">Signature: ${esc(x.topName[0])}</span>` : ''}</td><td>${fmtQ(x.drinks)}</td><td>${fmt1(x.std)}</td><td>${fmtQ(x.waters)}</td><td>${x.ratio != null ? fmt1(x.ratio) : '–'}</td></tr>`).join('')}</tbody></table></div>
         <p class="muted small">W/D is waters per drink. One or more is the goal.</p></section>` : ''}
       <div class="btn-row"><button class="btn" type="button" data-act="copy-stats">${I.copy}Copy for the group chat</button></div>`;
     if (c.drinks) drawHours(c.hours);
@@ -1757,14 +1958,14 @@ Aguardiente|0.5
     const data = hours.map((n, i) => ({ n, i }));
     hours.forEach((n, i) => {
       const x = left + band * i + (band - bw) / 2;
-      s += `<g class="hitg"><rect class="hit" x="${left + band * i}" y="${top}" width="${band}" height="${ph}" tabindex="0" role="img" aria-label="${esc(`${hourLabel(i + cut)}: ${n} drinks`)}" data-tip-x="${x + bw / 2}" data-tip-y="${Math.min(y(n), y0 - 10)}" data-i="${i}"/><path class="mk" d="${barPath(x, y(n), bw, y0 - y(n), y0)}" fill="var(--drink)"/></g>`;
-      if (n && n === peak) s += `<text class="bar-label" x="${x + bw / 2}" y="${y(n) - 5}" text-anchor="middle">${n}</text>`;
+      s += `<g class="hitg"><rect class="hit" x="${left + band * i}" y="${top}" width="${band}" height="${ph}" tabindex="0" role="img" aria-label="${esc(`${hourLabel(i + cut)}: ${fmtQ(n)} drinks`)}" data-tip-x="${x + bw / 2}" data-tip-y="${Math.min(y(n), y0 - 10)}" data-i="${i}"/><path class="mk" d="${barPath(x, y(n), bw, y0 - y(n), y0)}" fill="var(--drink)"/></g>`;
+      if (n && n === peak) s += `<text class="bar-label" x="${x + bw / 2}" y="${y(n) - 5}" text-anchor="middle">${fmtQ(n)}</text>`;
       const clock = (i + cut) % 24;
       if (clock % 4 === 0) s += `<text class="axis-t" x="${left + band * i}" y="${H - 6}" text-anchor="middle">${clock === 0 ? '12a' : clock === 12 ? '12p' : clock < 12 ? clock + 'a' : (clock - 12) + 'p'}</text>`;
     });
     s += `<line x1="${left}" x2="${W - right}" y1="${y0}" y2="${y0}" stroke="var(--muted)" stroke-width="1"/></svg><div class="tip" hidden></div>`;
     box.innerHTML = s;
-    chartTips(box, data, v => [`${hourLabel(v.i + cut)}–${hourLabel(v.i + cut + 1)}`, ['drink', `${v.n} drink${v.n === 1 ? '' : 's'}`]], W);
+    chartTips(box, data, v => [`${hourLabel(v.i + cut)}–${hourLabel(v.i + cut + 1)}`, ['drink', `${fmtQ(v.n)} ${many(v.n, 'drink', 'drinks')}`]], W);
   }
   function statsText() {
     const c = computeStats(statsScope);
@@ -1809,6 +2010,7 @@ Aguardiente|0.5
           </div>
         </section>
         <section class="card"><h3>Drinks</h3>
+          <div class="field"><span>When you tap + Drink</span><div class="seg" role="group" aria-label="When you tap + Drink"><button type="button" data-act="ask-drink" data-v="1" aria-pressed="${S.askDrink !== false}">Show my drink list</button><button type="button" data-act="ask-drink" data-v="0" aria-pressed="${S.askDrink === false}">Log it right away</button></div></div>
           <label class="field" for="set-limit"><span>Personal daily drink limit (optional)</span><input id="set-limit" type="number" min="0" max="40" inputmode="numeric" data-set="limit" value="${esc(S.limit)}" placeholder="No limit"></label>
           <p class="muted small">Shows a /N next to the drink count and a bar that turns red past your number. Leave blank to hide it.</p>
           <div class="grid2">
@@ -1895,10 +2097,10 @@ Aguardiente|0.5
   }
   function csv() {
     const q = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
-    const rows = [['Date', 'Cruise day', 'Port', 'Person', 'Type', 'Name', 'Ordered', 'Finished', 'Minutes', 'Std drinks', 'Water ml', 'Where', 'Favorite', 'Note']];
+    const rows = [['Date', 'Cruise day', 'Port', 'Person', 'Type', 'Name', 'Finished amount', 'Started', 'Finished', 'Minutes', 'Std drinks', 'Water ml', 'Where', 'Favorite', 'Note']];
     E.slice().sort((a, b) => a.t - b.t).forEach(e => {
-      const k = dayKey(e.t);
-      rows.push([k, inTrip(k) ? dayIndex(k) + 1 : '', portOf(k), nameOf(e.p || 0), e.kind, e.kind === 'water' ? '' : (e.name || ''), e.start ? fmtTime(e.start) : '', e.open ? '' : fmtTime(e.t), e.start && !e.open ? Math.round((e.t - e.start) / 60000) : '', e.kind === 'water' ? '' : e.std, e.kind === 'water' ? e.ml : '', e.where || '', e.fav ? 'yes' : '', e.note || '']);
+      const k = dayKey(e.t), part = partOf(e), isW = e.kind === 'water';
+      rows.push([k, inTrip(k) ? dayIndex(k) + 1 : '', portOf(k), nameOf(e.p || 0), e.kind, isW ? '' : (e.name || ''), e.open ? 'still sipping' : part, e.start ? fmtTime(e.start) : '', e.open ? '' : fmtTime(e.t), e.start && !e.open ? Math.round((e.t - e.start) / 60000) : '', isW ? '' : Math.round((+e.std || 0) * part * 100) / 100, isW ? Math.round((+e.ml || 0) * part) : '', e.where || '', e.fav ? 'yes' : '', e.note || '']);
     });
     return rows.map(r => r.map(q).join(',')).join('\n');
   }
@@ -1906,11 +2108,13 @@ Aguardiente|0.5
   // ---------- actions ----------
   let wipeArmed = 0;
   const ACT = {
-    'add-drink': t => quickDrink(+t.dataset.p),
+    'add-drink': t => { const p = +t.dataset.p; if (S.askDrink === false) quickDrink(p); else openPicker(p, 'done'); },
     'add-water': t => quickWater(+t.dataset.p),
-    'start-drink': t => startDrink(+t.dataset.p),
+    'start-drink': t => { const p = +t.dataset.p; if (S.askDrink === false) startDrink(p); else openPicker(p, 'open'); },
+    'start-water': t => startWater(+t.dataset.p),
+    'ask-drink': t => { S.askDrink = t.dataset.v === '1'; saveS(); $$('[data-act="ask-drink"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === (S.askDrink ? '1' : '0')))); toast('Saved'); },
     again: t => again(+t.dataset.p, t.dataset.id),
-    finish: t => finish(t.dataset.id),
+    finish: t => finish(t.dataset.id, +t.dataset.part || 1),
     round: t => openRound(t.dataset.kind),
     edit: t => openEditor(t.dataset.id),
     'add-past': t => openEditor(null, { p: +t.dataset.p, day: sel }),

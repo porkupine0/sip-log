@@ -10,7 +10,7 @@ const FILE = 'file://' + path.join(__dirname, '..', 'dist', 'Sip-Log.html');
   await page.goto(FILE);
   await page.waitForTimeout(200);
   // log for Partner before finishing setup, then blank Partner and fill person 3
-  await page.click('[data-act="add-drink"][data-p="1"]');
+  await page.click('[data-act="add-drink"][data-p="1"]'); await page.click('[data-pk="plain"]');
   await page.fill('#su-p1', '');
   await page.fill('#su-p2', 'Kim');
   await page.click('[data-act="setup-save"]');

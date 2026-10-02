@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
   await page.goto('http://localhost:8091/');
   await page.waitForFunction(() => document.querySelector('#status span').textContent === 'Offline ready', null, { timeout: 15000 });
   await page.click('[data-act="setup-save"]');
-  await page.click('[data-act="add-drink"][data-p="0"]');
+  await page.click('[data-act="add-drink"][data-p="0"]'); await page.click('[data-pk="plain"]');
   await page.click('[data-act="add-water"][data-p="0"]');
   await ctx.setOffline(true);
   await page.reload();

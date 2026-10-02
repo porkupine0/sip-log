@@ -34,10 +34,10 @@ fs.mkdirSync(path.join(__dirname, 'shots'), { recursive: true });
   checks.afterSetup = { tiles: await tiles(), names: await tileNames(), compact: await page.$$eval('.people.compact', e => e.length) };
 
   // quick logging
-  await page.click('[data-act="add-drink"][data-p="0"]');
+  await page.click('[data-act="add-drink"][data-p="0"]'); await page.click('[data-pk="plain"]');
   await page.click('[data-act="add-water"][data-p="1"]');
   await page.click('[data-act="add-water"][data-p="0"]');
-  await page.click('[data-act="start-drink"][data-p="1"]');
+  await page.click('[data-act="start-drink"][data-p="1"]'); await page.click('[data-pk="plain"]');
   await page.click('[data-act="add-water"][data-p="3"]');
   await page.waitForTimeout(150);
   await page.screenshot({ path: OUT(`02-four-people-${scheme}.png`) });
@@ -90,7 +90,7 @@ fs.mkdirSync(path.join(__dirname, 'shots'), { recursive: true });
   await page.click('[data-act="tlwho"][data-v="-1"]');
 
   // finish Alex's timed drink, log "again" for Sam
-  await page.click('[data-act="finish"]');
+  await page.click('[data-act="finish"][data-part="1"]');
   await page.waitForTimeout(100);
   await page.click('[data-act="again"][data-p="0"]');
   await page.waitForTimeout(200);
