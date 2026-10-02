@@ -17,7 +17,7 @@ Endless rain for sleeping, made on your phone. There is no recording and no loop
 
 ## Editing
 
-Source is in `rain/source/`. Rebuild from there with:
+Source is in `rain/source/`. From the `rain/` folder, rebuild with:
 
 ```
 cd source
