@@ -160,8 +160,6 @@ p { margin: 0; }
 .tile.compact .big svg { width: 15px; height: 15px; }
 .tile.compact .mini { padding: 4px 8px; }
 .tile.compact .lastline, .tile.compact .nudge { font-size: 12px; }
-.tile.compact .sipping { padding: 8px; }
-.tile.compact .sipping p { font-size: 13px; }
 .figs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .fig { display: grid; gap: 0; min-width: 0; }
 .fig .v { font-size: 40px; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; }
@@ -186,20 +184,22 @@ p { margin: 0; }
 .mini span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mini svg { width: 15px; height: 15px; flex: none; }
 .lastline { font-size: 13px; color: var(--muted); }
-.sipping { border-radius: 12px; padding: 10px; background: var(--drink-soft); display: grid; gap: 8px; }
-.sipping p { font-size: 14px; }
-.sipping b { font-weight: 700; }
-.sipping .btn { background: var(--surface); border-color: var(--drink); min-height: 40px; }
-.sipping.w { background: var(--water-soft); }
-.sipping.w .btn { border-color: var(--water); }
-.sipping .fin { width: 100%; }
-.partrow { display: grid; gap: 4px; }
-.partrow .cap { font-size: 12px; color: var(--ink-2); }
-.g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.g3 button { min-height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 16px; font-weight: 700; padding: 0; }
-.sipping .g3 button { border-color: var(--drink-soft); }
 .mini[data-act="start-drink"] svg { color: var(--drink); }
 .mini.w svg { color: var(--water); }
+.sipcard { gap: 4px; }
+.siplist { list-style: none; margin: 0; padding: 0; display: grid; }
+.siprow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.siprow:last-child { border-bottom: 0; }
+.sip-main { flex: 1 1 150px; min-width: 0; display: flex; align-items: flex-start; gap: 8px; border: 0; background: none; padding: 4px 0; text-align: left; }
+.sip-txt { display: grid; gap: 1px; min-width: 0; }
+.sip-txt b { font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.sip-txt > span { font-size: 13px; color: var(--muted); }
+.sip-btns { display: flex; gap: 6px; margin-left: auto; }
+.sip-btns button { min-width: 42px; min-height: 42px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 17px; font-weight: 700; padding: 0 8px; }
+.sip-btns .sip-done { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; border: 1.5px solid var(--drink); padding: 0 12px; }
+.sip-done svg { width: 16px; height: 16px; color: var(--drink); }
+.siprow.w .sip-done { border-color: var(--water); }
+.siprow.w .sip-done svg { color: var(--water); }
 .nudge { font-size: 13px; border-radius: 10px; padding: 8px 10px; background: var(--water-soft); color: var(--ink); }
 
 /* glance strip */
@@ -320,6 +320,8 @@ details[open] > summary { margin-bottom: 6px; }
 .pick.plain .pk-n { color: var(--ink-2); font-weight: 500; }
 .pick.add .pk-n { color: var(--drink); }
 .heart { color: var(--drink); }
+.pk-hint { font-size: 14px; border-radius: 10px; padding: 8px 10px; background: var(--drink-soft); color: var(--ink); }
+.pk-badge { font-size: 11px; font-weight: 700; color: var(--bg); background: var(--ink); border-radius: 6px; padding: 1px 6px; margin-left: 4px; }
 .sugg { display: grid; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
 .sugg button { border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; padding: 10px 12px; display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
 .sugg button:last-child { border-bottom: 0; }
@@ -1125,6 +1127,7 @@ Aguardiente|0.5
     </div>
     ${isToday ? '' : '<button class="btn small back-today" type="button" data-act="today">Back to today</button>'}
     ${isToday && vis.length >= 2 ? `<div class="roundbar" role="group" aria-label="Log for several people at once"><button class="btn small" type="button" data-act="round" data-kind="drink">${I.cheers}Round of drinks</button><button class="btn small" type="button" data-act="round" data-kind="water">${I.water}Water round</button></div>` : ''}
+    ${isToday ? sippingHTML() : ''}
     <div class="people ${compact ? 'compact' : ''}">${vis.map(p => tileHTML(p, byPerson(list, p), isToday, k, compact)).join('')}</div>
     ${canAdd() ? `<button class="btn small addp" type="button" data-act="person-new">${I.person}Add a person</button>` : ''}
     <section class="card" aria-label="Day at a glance">
@@ -1153,19 +1156,32 @@ Aguardiente|0.5
     </div>`;
   }
 
-  // something still being sipped: one tap if it's all gone, or say how much was finished
-  function sipBox(e) {
-    const isW = e.kind === 'water';
-    return `<div class="sipping ${isW ? 'w' : ''}">
-      <p>Sipping <b>${esc(isW ? 'water' : (e.name || 'a drink'))}</b> · <span data-dur="${e.start || e.t}">${fmtDur((Date.now() - (e.start || e.t)) / 60000)}</span></p>
-      <button class="btn small fin" type="button" data-act="finish" data-id="${e.id}" data-part="1">${I.check}Finished</button>
-      <div class="partrow" role="group" aria-label="Only finished part of it"><span class="cap">Only part of it?</span><div class="g3">${PARTS.slice(1).map(([v, l]) => `<button type="button" data-act="finish" data-id="${e.id}" data-part="${v}" aria-label="Finished ${l} of it">${l}</button>`).join('')}</div></div>
-    </div>`;
+  // everything still being sipped, by everyone: two drinks at once each get their own row and buttons
+  function sippingHTML() {
+    const list = E.filter(e => e.open).sort((a, b) => (a.start || a.t) - (b.start || b.t));
+    if (!list.length) return '';
+    const showWho = visibleIdx().length > 1 || shownIn(list).length > 1;
+    return `<section class="card sipcard" aria-label="Sipping now">
+      <div class="section-head"><h2>Sipping now</h2><span class="muted small">Done when it's empty, or how much was finished</span></div>
+      <ul class="siplist">${list.map(e => {
+        const isW = e.kind === 'water', name = isW ? 'Water' : (e.name || 'Drink'), since = e.start || e.t;
+        const old = Date.now() - since > 6 * 3600e3;
+        return `<li class="siprow ${isW ? 'w' : ''}">
+          <button class="sip-main" type="button" data-act="edit" data-id="${e.id}" aria-label="Edit ${esc(name)}">
+            <span class="tl-ico ${isW ? 'water' : 'drink'}" aria-hidden="true">${isW ? I.water : I.drink}</span>
+            <span class="sip-txt"><b>${esc(name)}</b><span>${showWho ? `${esc(labelOf(e.p || 0))} · ` : ''}${old ? `since ${esc(dateLabel(dayKey(since), { weekday: 'short' }))} ${fmtTime(since)}` : `<span data-dur="${since}">${fmtDur((Date.now() - since) / 60000)}</span>`}</span></span>
+          </button>
+          <span class="sip-btns" role="group" aria-label="How much of the ${esc(name)} was finished">
+            <button class="sip-done" type="button" data-act="finish" data-id="${e.id}" data-part="1" aria-label="Finished all of the ${esc(name)}">${I.check}Done</button>${PARTS.slice(1).map(([v, l]) => `<button type="button" data-act="finish" data-id="${e.id}" data-part="${v}" aria-label="Finished ${l} of the ${esc(name)}">${l}</button>`).join('')}
+          </span>
+        </li>`;
+      }).join('')}</ul>
+    </section>`;
   }
   function tileHTML(p, list, isToday, k, compact) {
     const st = stats(list);
     const goal = +S.waterGoal || 0, lim = +S.limit || 0;
-    const open = st.open[st.open.length - 1], openW = st.openW[st.openW.length - 1];
+    const going = st.open.length + st.openW.length;
     const ln = isToday ? lastNamed(p) : null;
     const nameBtn = `<button class="namebtn" type="button" data-act="person-edit" data-p="${p}" aria-label="Rename ${esc(nameOf(p))}"><span class="nm">${esc(labelOf(p))}</span><span class="pen" aria-hidden="true">${I.pencil}</span></button>`;
     const actions = isToday
@@ -1186,10 +1202,12 @@ Aguardiente|0.5
       </div>
       ${lim ? `<div class="meter drinkm ${st.drinks > lim ? 'over' : ''}" role="img" aria-label="${fmtQ(st.drinks)} of ${lim} drinks"><i style="width:${Math.min(100, st.drinks / lim * 100)}%"></i></div>` : ''}
       ${goal ? `<div class="meter" role="img" aria-label="${fmtQ(st.waters)} of ${goal} waters"><i style="width:${Math.min(100, st.waters / goal * 100)}%"></i></div>` : ''}
-      ${open ? sipBox(open) : ''}
-      ${openW ? sipBox(openW) : ''}
       ${actions}
-      <p class="lastline">${st.last ? `Last drink ${fmtTime(st.last.t)}${isToday ? ` · <span data-ago="${st.last.t}">${ago(st.last.t)}</span>` : ''}` : 'No drinks yet'}${st.pace ? ` · one every ${fmtDur(st.pace)}` : ''}</p>
+      <p class="lastline">${[
+        st.last ? `Last drink ${fmtTime(st.last.t)}${isToday ? ` · <span data-ago="${st.last.t}">${ago(st.last.t)}</span>` : ''}` : (isToday && going ? '' : 'No drinks yet'),
+        st.pace ? `one every ${fmtDur(st.pace)}` : '',
+        isToday && going ? `<b>${going} in progress</b>` : ''
+      ].filter(Boolean).join(' · ')}</p>
       ${isToday && st.drinks - st.waters >= 2 ? `<p class="nudge">${fmtQ(st.drinks - st.waters)} drinks ahead of water. Time for a bottle?</p>` : ''}
     </div>`;
   }
@@ -1353,11 +1371,11 @@ Aguardiente|0.5
   }
   function startWater(p) {
     const now = Date.now();
-    addEntries([newWater(p, now, { start: now, open: true })], `Water started for ${nameOf(p)}. Tap Finished when it's done.`);
+    addEntries([newWater(p, now, { start: now, open: true })], `Water started for ${nameOf(p)}. Tap Done under Sipping now when it's finished.`);
   }
   function startDrink(p) {
     const now = Date.now();
-    addEntries([newDrink(p, { t: now, start: now, open: true })], `Timer started for ${nameOf(p)}. Tap Finished when it's done.`, true);
+    addEntries([newDrink(p, { t: now, start: now, open: true })], `Timer started for ${nameOf(p)}. Tap Done under Sipping now when it's finished.`, true);
   }
   function again(p, id) {
     const src = E.find(e => e.id === id); if (!src) return;
@@ -1388,7 +1406,7 @@ Aguardiente|0.5
 
   // + Drink: pick from this person's past drinks, everyone's recent ones, or the recipe list
   function openPicker(p, mode) {
-    let part = 1;
+    let part = 1, count = 1, first = null;
     const hist = drinkHistory(p);
     const stdOf = h => +((h.mine || h.last).std) || stdFor(h.name) || 1.5;
     const el = openOverlay(`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="pk-title">
@@ -1398,24 +1416,27 @@ Aguardiente|0.5
       <div class="pk-list" id="pk-list"></div>
     </div>`);
     const top = $('#pk-top', el), list = $('#pk-list', el), input = $('#pk-q', el);
-    const row = (name, std, meta, fav) => `<button class="pick" type="button" data-pk="pick" data-name="${esc(name)}" data-std="${std}"><span class="pk-n">${fav ? '<span class="heart" aria-label="favorite">♥</span> ' : ''}${esc(name)}</span><span class="pk-m">${esc(meta)}</span></button>`;
+    const firstBadge = name => (first && norm(first.name) === norm(name) ? '<span class="pk-badge">1st</span>' : '');
+    const row = (name, std, meta, fav) => `<button class="pick" type="button" data-pk="pick" data-name="${esc(name)}" data-std="${std}"><span class="pk-n">${fav ? '<span class="heart" aria-label="favorite">♥</span> ' : ''}${esc(name)}${firstBadge(name)}</span><span class="pk-m">${esc(meta)}</span></button>`;
     const drawTop = () => {
       top.innerHTML = `<div class="seg wide" role="group" aria-label="Status"><button type="button" data-pk="mode" data-v="done" aria-pressed="${mode === 'done'}">Finished it</button><button type="button" data-pk="mode" data-v="open" aria-pressed="${mode === 'open'}">Just ordered</button></div>
+        <div class="field"><span>How many?</span><div class="chips" role="group" aria-label="How many drinks"><button class="chip" type="button" data-pk="count" data-v="1" aria-pressed="${count === 1}">One</button><button class="chip" type="button" data-pk="count" data-v="2" aria-pressed="${count === 2}">Two at once</button></div></div>
+        ${count === 2 ? `<p class="pk-hint" aria-live="polite">${first ? `First: <b>${esc(first.name || 'a drink, no name')}</b>. Now pick the second one. Tap it again for two of the same.` : 'Pick the first drink, then the second. Tap the same one twice for two of it.'}</p>` : ''}
         ${mode === 'done'
           ? `<div class="field"><span>How much did ${esc(nameOf(p))} finish?</span><div class="chips" role="group" aria-label="How much was finished">${PARTS.map(([v, l]) => `<button class="chip ${v < 1 ? 'frac' : ''}" type="button" data-pk="part" data-v="${v}" aria-pressed="${part === v}" aria-label="${v === 1 ? 'All of it' : l + ' of it'}">${v === 1 ? 'All of it' : l}</button>`).join('')}</div></div>`
-          : `<p class="muted small">Starts a timer. Tap Finished on ${esc(nameOf(p))}'s counter when it's done, or say how much was left.</p>`}`;
+          : `<p class="muted small">Starts a timer. When it's finished, tap Done under Sipping now, or how much was had.</p>`}`;
     };
     const drawList = () => {
       const typed = input.value.trim(), q = norm(typed);
       let h = '';
       if (!q) {
-        h += `<button class="pick plain" type="button" data-pk="plain"><span class="pk-n">${I.drink}Just a drink, no name</span><span class="pk-m">add it later</span></button>`;
+        h += `<button class="pick plain" type="button" data-pk="plain"><span class="pk-n">${I.drink}Just a drink, no name${first && !first.name ? '<span class="pk-badge">1st</span>' : ''}</span><span class="pk-m">add it later</span></button>`;
         const own = hist.filter(x => x.mine).slice(0, 8), others = hist.filter(x => !x.mine).slice(0, 8);
         if (own.length) h += `<p class="pk-h">${esc(nameOf(p))}'s drinks</p>` + own.map(x => row(x.name, stdOf(x), `×${x.count} · ${whenAgo(x.mine.t)}`, x.fav)).join('');
         if (others.length) h += `<p class="pk-h">Others have had</p>` + others.map(x => row(x.name, stdOf(x), `${nameOf(x.last.p || 0)} · ${whenAgo(x.last.t)}`, x.fav)).join('');
         if (hist.length < 4) {
           const seen = new Set(hist.map(x => norm(x.name)));
-          const pop = POPULAR.filter(n => !seen.has(norm(n)) && catalogByName.has(norm(n))).slice(0, 8);
+          const pop = POPULAR.filter(n => !seen.has(norm(n)) && catalogByName.has(norm(n)));
           if (pop.length) h += `<p class="pk-h">Cruise favorites</p>` + pop.map(n => row(catalogByName.get(norm(n)).name, stdFor(n), `≈${fmt1(stdFor(n))} std`, false)).join('');
         }
       } else {
@@ -1429,25 +1450,35 @@ Aguardiente|0.5
       }
       list.innerHTML = h;
     };
-    const commit = (name, std) => {
+    const commit = picks => {
       const now = Date.now();
       const st = stats(byPerson(forDay(curKey()), p));
-      const e = mode === 'open'
-        ? newDrink(p, { t: now, start: now, open: true, name, std })
-        : newDrink(p, Object.assign({ name, std }, part < 1 ? { part } : {}));
+      const items = picks.map(x => mode === 'open'
+        ? newDrink(p, { t: now, start: now, open: true, name: x.name, std: x.std })
+        : newDrink(p, Object.assign({ name: x.name, std: x.std }, part < 1 ? { part } : {})));
       closeTop();
-      addEntries([e], mode === 'open'
-        ? `Timer started: ${name || 'a drink'} for ${nameOf(p)}`
-        : `${name || 'Drink'}${part < 1 ? ` (${partWord(part)})` : ''} for ${nameOf(p)} · drink ${st.orders + 1} today`, 'edit');
+      const two = items.length > 1;
+      const label = !two ? (picks[0].name || (mode === 'open' ? 'a drink' : 'Drink'))
+        : !picks[0].name && !picks[1].name ? '2 drinks'
+        : norm(picks[0].name) === norm(picks[1].name) ? `2 × ${picks[0].name}`
+        : `${picks[0].name || 'a drink'} + ${picks[1].name || 'a drink'}`;
+      addEntries(items, mode === 'open'
+        ? `Timer${two ? 's' : ''} started: ${label} for ${nameOf(p)}`
+        : `${label}${part < 1 ? ` (${partWord(part)}${two ? ' each' : ''})` : ''} for ${nameOf(p)} · drink${two ? `s ${st.orders + 1}–${st.orders + 2}` : ` ${st.orders + 1}`} today`, two ? null : 'edit');
+    };
+    const choose = (name, std) => {
+      if (count === 2 && !first) { first = { name, std }; input.value = ''; drawTop(); drawList(); return; }
+      commit(count === 2 ? [first, { name, std }] : [{ name, std }]);
     };
     el.addEventListener('click', ev => {
       const b = ev.target.closest('[data-pk]'); if (!b) return;
       const a = b.dataset.pk;
       if (a === 'mode') { mode = b.dataset.v; drawTop(); }
+      else if (a === 'count') { count = +b.dataset.v; first = null; drawTop(); drawList(); }
       else if (a === 'part') { part = +b.dataset.v; drawTop(); }
-      else if (a === 'pick') commit(b.dataset.name, +b.dataset.std || stdFor(b.dataset.name) || 1.5);
-      else if (a === 'plain') commit('', 1.5);
-      else if (a === 'typed') { const n = input.value.trim(); if (n) commit(n, stdFor(n) || 1.5); }
+      else if (a === 'pick') choose(b.dataset.name, +b.dataset.std || stdFor(b.dataset.name) || 1.5);
+      else if (a === 'plain') choose('', 1.5);
+      else if (a === 'typed') { const n = input.value.trim(); if (n) choose(n, stdFor(n) || 1.5); }
     });
     input.addEventListener('input', drawList);
     input.addEventListener('keydown', ev => {
@@ -1455,7 +1486,7 @@ Aguardiente|0.5
       ev.preventDefault();
       const n = input.value.trim(); if (!n) return;
       const known = hist.find(x => norm(x.name) === norm(n));
-      commit(known ? known.name : n, known ? stdOf(known) : (stdFor(n) || 1.5));
+      choose(known ? known.name : n, known ? stdOf(known) : (stdFor(n) || 1.5));
     });
     drawTop();
     drawList();

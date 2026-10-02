@@ -38,7 +38,7 @@ const OUT = p => path.join(__dirname, 'shots', p);
   await page.click('.pick[data-name="Coconut Patrón Margarita"]');
   await page.waitForTimeout(200);
   await page.screenshot({ path: OUT(`p3-sipping-${scheme}.png`) });
-  checks.sippingBoxes = await page.$$eval('.sipping', b => b.map(x => x.className + ' | ' + x.querySelector('p').textContent.replace(/\s+/g, ' ').trim()));
+  checks.sippingBoxes = await page.$$eval('.siprow', b => b.map(x => x.className + ' | ' + x.querySelector('.sip-txt').textContent.replace(/\s+/g, ' ').trim()));
 
   // 3. Alex finished only half; Sam finished three quarters of the water
   const alexOpen = (await entries()).find(e => e.p === 1 && e.open);
