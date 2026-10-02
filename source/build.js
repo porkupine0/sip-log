@@ -31,7 +31,7 @@ const fonts = `@font-face{font-family:"Limelight";font-style:normal;font-weight:
 const css = R('src/style.css');
 const body = R('src/body.html');
 const scripts = `<script type="text/plain" id="catalog-data">\n${cat}\n</script>
-<script>window.SIPLOG_URL = ${JSON.stringify(process.env.SITE_URL || '')};</script>
+<script>window.SIPLOG_URL = ${JSON.stringify(process.env.SITE_URL || '')}; window.SIPLOG_BUILD = ${JSON.stringify(new Date().toISOString())};</script>
 <script>\n${R('src/app.js')}\n</script>`;
 const title = 'Sip Log';
 const desc = 'Offline drink and water counter for your cruise: one-tap logging, finish times, a daily timeline and a day-by-day trip history.';
@@ -76,7 +76,8 @@ fs.writeFileSync(path.join(dist, 'web', 'sw.js'), `// Sip Log offline cache. Ser
 const CACHE = 'siplog-${version}';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png'];
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache: 'reload' skips the browser's HTTP cache, so a new version never installs old files
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(a => new Request(a, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('siplog-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -93,7 +94,7 @@ self.addEventListener('fetch', e => {
   const key = isApp ? './index.html' : req;
   e.respondWith(caches.open(CACHE).then(async cache => {
     const hit = await cache.match(key, { ignoreSearch: true });
-    const net = fetch(req).then(res => { if (res && res.ok) cache.put(key, res.clone()); return res; }).catch(() => null);
+    const net = fetch(url.href, { cache: 'no-cache' }).then(res => { if (res && res.ok) cache.put(key, res.clone()); return res; }).catch(() => null);
     if (hit) { e.waitUntil(net); return hit; }
     return (await net) || new Response('Offline and not cached yet. Open Sip Log once while online.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
   }));

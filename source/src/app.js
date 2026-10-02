@@ -7,6 +7,7 @@
   const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/['’]/g, '').trim();
   const pad = n => String(n).padStart(2, '0');
   const SITE = window.SIPLOG_URL || '';
+  const BUILD_LABEL = (() => { const b = window.SIPLOG_BUILD; const d = b ? new Date(b) : null; return d && !isNaN(d) ? d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'this copy'; })();
   const RECIPES_URL = 'https://porkupine0.github.io/sip-and-sail/';
 
   // Drink names from the Sip & Sail catalog ("name|standard drinks")
@@ -195,7 +196,7 @@
     const e = stack.pop(); if (!e) return null;
     e.el.remove();
     if (e.onClose) e.onClose();
-    if (!stack.length) document.body.style.overflow = '';
+    if (!stack.length) { document.body.style.overflow = ''; if (updatePending) setTimeout(reloadForUpdate, 400); }
     return e;
   }
   function closeTop() { const e = removeTop(); if (e && e.pushed) { ignorePop++; try { history.back(); } catch (err) { ignorePop--; } } }
@@ -296,7 +297,7 @@
 
   // everything still being sipped, by everyone: two drinks at once each get their own row and buttons
   function sippingHTML() {
-    const list = E.filter(e => e.open).sort((a, b) => (a.start || a.t) - (b.start || b.t));
+    const list = E.filter(e => e.open).sort((a, b) => (a.p || 0) - (b.p || 0) || (a.start || a.t) - (b.start || b.t));
     if (!list.length) return '';
     const showWho = visibleIdx().length > 1 || shownIn(list).length > 1;
     return `<section class="card sipcard" aria-label="Sipping now">
@@ -319,7 +320,7 @@
   function tileHTML(p, list, isToday, k, compact) {
     const st = stats(list);
     const goal = +S.waterGoal || 0, lim = +S.limit || 0;
-    const going = st.open.length + st.openW.length;
+    const going = st.open.concat(st.openW).map(e => (e.kind === 'water' ? 'water' : e.name || 'a drink'));
     const ln = isToday ? lastNamed(p) : null;
     const nameBtn = `<button class="namebtn" type="button" data-act="person-edit" data-p="${p}" aria-label="Rename ${esc(nameOf(p))}"><span class="nm">${esc(labelOf(p))}</span><span class="pen" aria-hidden="true">${I.pencil}</span></button>`;
     const actions = isToday
@@ -342,9 +343,9 @@
       ${goal ? `<div class="meter" role="img" aria-label="${fmtQ(st.waters)} of ${goal} waters"><i style="width:${Math.min(100, st.waters / goal * 100)}%"></i></div>` : ''}
       ${actions}
       <p class="lastline">${[
-        st.last ? `Last drink ${fmtTime(st.last.t)}${isToday ? ` · <span data-ago="${st.last.t}">${ago(st.last.t)}</span>` : ''}` : (isToday && going ? '' : 'No drinks yet'),
+        st.last ? `Last drink ${fmtTime(st.last.t)}${isToday ? ` · <span data-ago="${st.last.t}">${ago(st.last.t)}</span>` : ''}` : (isToday && going.length ? '' : 'No drinks yet'),
         st.pace ? `one every ${fmtDur(st.pace)}` : '',
-        isToday && going ? `<b>${going} in progress</b>` : ''
+        isToday && going.length ? `<b>Sipping ${esc(joinNames(going))}</b>` : ''
       ].filter(Boolean).join(' · ')}</p>
       ${isToday && st.drinks - st.waters >= 2 ? `<p class="nudge">${fmtQ(st.drinks - st.waters)} drinks ahead of water. Time for a bottle?</p>` : ''}
     </div>`;
@@ -559,7 +560,7 @@
     const drawTop = () => {
       top.innerHTML = `<div class="seg wide" role="group" aria-label="Status"><button type="button" data-pk="mode" data-v="done" aria-pressed="${mode === 'done'}">Finished it</button><button type="button" data-pk="mode" data-v="open" aria-pressed="${mode === 'open'}">Just ordered</button></div>
         <div class="field"><span>How many?</span><div class="chips" role="group" aria-label="How many drinks"><button class="chip" type="button" data-pk="count" data-v="1" aria-pressed="${count === 1}">One</button><button class="chip" type="button" data-pk="count" data-v="2" aria-pressed="${count === 2}">Two at once</button></div></div>
-        ${count === 2 ? `<p class="pk-hint" aria-live="polite">${first ? `First: <b>${esc(first.name || 'a drink, no name')}</b>. Now pick the second one. Tap it again for two of the same.` : 'Pick the first drink, then the second. Tap the same one twice for two of it.'}</p>` : ''}
+        ${count === 2 ? `<p class="pk-hint" aria-live="polite">${first ? `First: <b>${esc(first.name || 'a drink, no name')}</b>. Now pick the second one. Tap it again for two of the same.` : `Pick the first drink, then the second. Tap the same one twice for two of it.${mode === 'open' ? ' Both show under Sipping now, so you can finish them one at a time.' : ''}`}</p>` : ''}
         ${mode === 'done'
           ? `<div class="field"><span>How much did ${esc(nameOf(p))} finish?</span><div class="chips" role="group" aria-label="How much was finished">${PARTS.map(([v, l]) => `<button class="chip ${v < 1 ? 'frac' : ''}" type="button" data-pk="part" data-v="${v}" aria-pressed="${part === v}" aria-label="${v === 1 ? 'All of it' : l + ' of it'}">${v === 1 ? 'All of it' : l}</button>`).join('')}</div></div>`
           : `<p class="muted small">Starts a timer. When it's finished, tap Done under Sipping now, or how much was had.</p>`}`;
@@ -612,7 +613,7 @@
       const b = ev.target.closest('[data-pk]'); if (!b) return;
       const a = b.dataset.pk;
       if (a === 'mode') { mode = b.dataset.v; drawTop(); }
-      else if (a === 'count') { count = +b.dataset.v; first = null; drawTop(); drawList(); }
+      else if (a === 'count') { count = +b.dataset.v; first = null; if (count === 2) mode = 'open'; drawTop(); drawList(); }
       else if (a === 'part') { part = +b.dataset.v; drawTop(); }
       else if (a === 'pick') choose(b.dataset.name, +b.dataset.std || stdFor(b.dataset.name) || 1.5);
       else if (a === 'plain') choose('', 1.5);
@@ -1202,6 +1203,7 @@
           <p><b>iPhone:</b> open ${SITE ? 'the link' : 'the Sip Log link'} in Safari, tap Share, then Add to Home Screen. Open it once while online; after that it works in airplane mode. Always use the Home Screen icon, because it keeps its own saved log separate from Safari.</p>
           <p><b>Android:</b> open the link in Chrome, tap ⋮, then Install app. The downloaded .html file also works offline in Chrome.</p>
           <p class="muted small">Looking for drink recipes? <a href="${RECIPES_URL}" target="_blank" rel="noopener">Sip &amp; Sail</a> has 530 of them (opens online).</p>
+          <div class="btn-row" style="align-items:center"><button class="btn small" type="button" data-act="check-update">Check for an update</button><span class="muted small">Version: ${esc(BUILD_LABEL)}</span></div>
         </section>
       </div>
       <p class="foot">Sip Log keeps a record, not medical advice. Standard drinks are estimates (0.6 oz of alcohol each).</p>`;
@@ -1333,6 +1335,11 @@
       E = []; saveE(); t.textContent = 'Cleared'; toast('All entries cleared');
     },
     'copy-site': () => copyText(SITE, 'Link copied'),
+    'check-update': () => {
+      if (!swReg) { toast('Updates come from the web link. Open Sip Log from your Home Screen while online.'); return; }
+      toast('Checking for an update…');
+      checkForUpdate(true).then(found => { if (!found) setTimeout(() => { if (!updatePending) toast(navigator.onLine === false ? 'You\'re offline. Try again with internet.' : 'You have the newest version.'); }, 1200); });
+    },
     'offline-help': () => { go('settings'); setTimeout(() => { const o = $('#offline'); if (o) o.scrollIntoView({ block: 'start' }); }, 30); }
   };
   document.addEventListener('click', e => {
@@ -1381,16 +1388,37 @@
     el.className = 'status-pill ' + cls;
     el.querySelector('span').textContent = label;
   }
+  // a new version installs in the background; reload into it as soon as nothing is half-done on screen
+  let swReg = null, updatePending = false, lastCheck = 0;
+  function reloadForUpdate() {
+    const a = document.activeElement;
+    if (stack.length || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) { updatePending = true; return; }
+    try { sessionStorage.setItem('siplog.updated', '1'); } catch (e) { /* ignore */ }
+    location.reload();
+  }
+  function checkForUpdate(force) {
+    if (!swReg || (!force && Date.now() - lastCheck < 5 * 60e3)) return Promise.resolve(false);
+    lastCheck = Date.now();
+    return swReg.update().then(() => !!(swReg.installing || swReg.waiting)).catch(() => false);
+  }
   function initOffline() {
     let framed = false;
     try { framed = window.top !== window.self; } catch (e) { framed = true; }
     if (location.protocol === 'file:') { setStatus('file'); return; }
     if (!framed && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && document.querySelector('link[rel="manifest"]')) {
-      setStatus(navigator.serviceWorker.controller ? 'ready' : 'saving');
+      const hadController = !!navigator.serviceWorker.controller;
+      setStatus(hadController ? 'ready' : 'saving');
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) reloadForUpdate(); });
       navigator.serviceWorker.register('sw.js').then(reg => {
+        swReg = reg; lastCheck = Date.now();
         if (reg.active) setStatus('ready');
         navigator.serviceWorker.ready.then(() => setStatus('ready'));
       }).catch(() => setStatus('online'));
+      // a Home Screen app resumed from the background doesn't reload, so look for a new version then too
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') return;
+        if (updatePending) reloadForUpdate(); else checkForUpdate(false);
+      });
       return;
     }
     setStatus('online');
@@ -1401,4 +1429,5 @@
   applyTheme();
   go('log');
   initOffline();
+  try { if (sessionStorage.getItem('siplog.updated')) { sessionStorage.removeItem('siplog.updated'); setTimeout(() => toast('Sip Log updated to the newest version'), 500); } } catch (e) { /* ignore */ }
 })();

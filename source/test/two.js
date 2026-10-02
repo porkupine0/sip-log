@@ -50,9 +50,24 @@ const OUT = p => path.join(__dirname, 'shots', p);
   await page.waitForTimeout(100);
   checks.afterMojito = await rows();
   checks.samTile = await page.$eval('.people .tile .fig.drink .v', v => v.firstChild.textContent);
-  // two of the same, finished: both get logged with the chosen amount
+  // from + Drink, Two at once switches to Just ordered so both show under Sipping now
   await page.click('[data-act="add-drink"][data-p="0"]');
   await page.click('[data-pk="count"][data-v="2"]');
+  checks.twoFromAddDrink = { mode: await page.getAttribute('[data-pk="mode"][aria-pressed="true"]', 'data-v'), hint: await page.textContent('.pk-hint') };
+  await page.click('.pick[data-name="Aperol Spritz"]');
+  await page.click('.pick[data-name="Espresso Martini"]');
+  await page.waitForTimeout(100);
+  checks.bothSipping = await rows();
+  checks.samLine = await page.$eval('.people .tile .lastline', l => l.textContent.trim());
+  // finish them one at a time
+  const E2 = await entries();
+  await page.click(`[data-act="finish"][data-id="${E2.find(e => e.name === 'Espresso Martini').id}"][data-part="1"]`);
+  await page.waitForTimeout(100);
+  checks.oneLeft = await rows();
+  // two of the same, finished (switching back to Finished it): both get logged with the chosen amount
+  await page.click('[data-act="add-drink"][data-p="0"]');
+  await page.click('[data-pk="count"][data-v="2"]');
+  await page.click('[data-pk="mode"][data-v="done"]');
   await page.click('[data-pk="part"][data-v="0.5"]');
   await page.click('.pick[data-name="Mojito"]');
   await page.click('.pick[data-name="Mojito"]');
